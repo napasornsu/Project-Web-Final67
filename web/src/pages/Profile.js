@@ -1,21 +1,68 @@
-import React from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import React, { useState, useEffect } from 'react';
+import { auth, db } from '../firebaseConfig';
+import { doc, getDoc, updateDoc } from "firebase/firestore"; // Import Firestore functions
 
-const Profile = ({ user, setUser }) => {
-  const handleLogout = async () => {
-    await signOut(auth);
-    setUser(null);
+const Profile = () => {
+  const [userData, setUserData] = useState(null);
+  const [editable, setEditable] = useState(false);
+  const [name, setName] = useState('');
+  const [photo, setPhoto] = useState('');
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      const fetchUserData = async () => {
+        const userRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userRef);
+        const data = userDoc.data();
+        setUserData(data);
+        setName(data.name);
+        setPhoto(data.photo);
+      };
+      fetchUserData();
+    }
+  }, []);
+
+  const handleUpdateProfile = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        name,
+        photo,
+      });
+      setEditable(false);
+      setUserData({ ...userData, name, photo });
+    }
   };
 
   return (
     <div>
-      <h1>User Profile</h1>
-      {user && (
+      {userData && (
         <div>
-          <img src={user.photoURL} alt="Profile" width={100} />
-          <h3>{user.displayName}</h3>
-          <button onClick={handleLogout}>Logout</button>
+          <h2>Profile</h2>
+          <img src={photo} alt="Profile" />
+          {editable ? (
+            <div>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <input
+                type="text"
+                value={photo}
+                onChange={(e) => setPhoto(e.target.value)}
+              />
+              <button onClick={handleUpdateProfile}>Save</button>
+            </div>
+          ) : (
+            <div>
+              <p>Name: {userData.name}</p>
+              <p>Email: {userData.email}</p>
+              <button onClick={() => setEditable(true)}>Edit</button>
+            </div>
+          )}
         </div>
       )}
     </div>
