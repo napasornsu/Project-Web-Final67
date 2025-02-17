@@ -1,6 +1,11 @@
 {
+  "name": "project-web-final67",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://napasornsu.github.io/Project-Web-Final67",
   "dependencies": {
     "firebase": "^11.3.1",
+    "project-web-final67": "file:",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
@@ -12,7 +17,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "browserslist": {
     "production": [
@@ -25,5 +32,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^3.2.3"
   }
 }
