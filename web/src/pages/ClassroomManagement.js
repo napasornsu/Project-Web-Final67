@@ -3,7 +3,7 @@ import { db, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore"; // Import Firestore functions
 
 const ClassroomManagement = () => {
-  const [classrooms, setClassrooms] = useState([]);
+  const [classrooms, setClassrooms] = useState([]); // State for storing classrooms
   const [newClassroom, setNewClassroom] = useState({
     name: '',
     code: '',
@@ -12,24 +12,26 @@ const ClassroomManagement = () => {
   });
 
   useEffect(() => {
+    // Fetch classrooms from Firestore when component mounts
     const fetchClassrooms = async () => {
-      const user = auth.currentUser;
+      const user = auth.currentUser; // Get current user from Firebase Auth
       if (user) {
-        const classroomRef = collection(db, 'classroom');
-        const q = query(classroomRef, where('owner', '==', user.uid));
-        const snapshot = await getDocs(q);
+        const classroomRef = collection(db, 'classroom'); // Reference to 'classroom' collection
+        const q = query(classroomRef, where('owner', '==', user.uid)); // Query to get classrooms where the current user is the owner
+        const snapshot = await getDocs(q); // Get documents from Firestore
         const classroomsData = [];
         snapshot.forEach((doc) => {
-          const data = doc.data();
-          console.log('Fetched classroom:', data); // Log fetched data
-          classroomsData.push({ id: doc.id, info: data });
+          const data = doc.data(); // Get document data
+          console.log('Fetched classroom:', data); // Log fetched data for debugging
+          classroomsData.push({ id: doc.id, info: data.info }); // Store classroom data in state
         });
-        setClassrooms(classroomsData);
+        setClassrooms(classroomsData); // Update classrooms state with fetched data
       }
     };
     fetchClassrooms();
-  }, []);
+  }, []); // Empty dependency array means this runs once when the component mounts
 
+  // Handle creating a new classroom
   const handleCreateClassroom = async () => {
     const user = auth.currentUser;
     if (user) {
@@ -49,6 +51,8 @@ const ClassroomManagement = () => {
   return (
     <div>
       <h2>Manage Your Classrooms</h2>
+
+      {/* Form to create a new classroom */}
       <div>
         <h3>Create New Classroom</h3>
         <input
@@ -78,17 +82,22 @@ const ClassroomManagement = () => {
         <button onClick={handleCreateClassroom}>Create Classroom</button>
       </div>
 
+      {/* List of classrooms */}
       <h3>Your Classrooms</h3>
       <ul>
-        {classrooms.map((classroom, index) => (
-          <li key={index}>
-            {classroom.info ? (
-              <span>{classroom.info.name || 'No name available'}</span>
-            ) : (
-              <span>No info available</span>
-            )}
-          </li>
-        ))}
+        {classrooms.length > 0 ? (
+          classrooms.map((classroom) => (
+            <li key={classroom.id}>
+              {classroom.info && classroom.info.name ? (
+                <span>{classroom.info.name}</span> // Display the name of the classroom
+              ) : (
+                <span>Classroom name is not available</span>
+              )}
+            </li>
+          ))
+        ) : (
+          <li>No classrooms available</li>
+        )}
       </ul>
     </div>
   );
