@@ -24,7 +24,6 @@ const App = () => {
 
   return (
     <Router basename="/Project-Web-Final67">
-    <Router>
       <div className="App">
         <Routes>
           {/* Route for root path */}
@@ -54,7 +53,6 @@ const App = () => {
           />
         </Routes>
       </div>
-    </Router>
     </Router>
   );
 };
