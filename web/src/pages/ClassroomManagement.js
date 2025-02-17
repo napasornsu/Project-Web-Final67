@@ -1,37 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore"; // Import Firestore functions
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { QRCodeCanvas } from 'qrcode.react';
 
 const ClassroomManagement = () => {
-  const [classrooms, setClassrooms] = useState([]); // State for storing classrooms
+  const [classrooms, setClassrooms] = useState([]);
   const [newClassroom, setNewClassroom] = useState({
     name: '',
     code: '',
     room: '',
     photo: '',
   });
+  const [editingClassroom, setEditingClassroom] = useState(null);
 
   useEffect(() => {
-    // Fetch classrooms from Firestore when component mounts
     const fetchClassrooms = async () => {
-      const user = auth.currentUser; // Get current user from Firebase Auth
+      const user = auth.currentUser;
       if (user) {
-        const classroomRef = collection(db, 'classroom'); // Reference to 'classroom' collection
-        const q = query(classroomRef, where('owner', '==', user.uid)); // Query to get classrooms where the current user is the owner
-        const snapshot = await getDocs(q); // Get documents from Firestore
+        const classroomRef = collection(db, 'classroom');
+        const q = query(classroomRef, where('owner', '==', user.uid));
+        const snapshot = await getDocs(q);
         const classroomsData = [];
         snapshot.forEach((doc) => {
-          const data = doc.data(); // Get document data
-          console.log('Fetched classroom:', data); // Log fetched data for debugging
-          classroomsData.push({ id: doc.id, info: data.info }); // Store classroom data in state
+          const data = doc.data();
+          classroomsData.push({ id: doc.id, info: data.info });
         });
-        setClassrooms(classroomsData); // Update classrooms state with fetched data
+        setClassrooms(classroomsData);
       }
     };
     fetchClassrooms();
-  }, []); // Empty dependency array means this runs once when the component mounts
+  }, []);
 
-  // Handle creating a new classroom
   const handleCreateClassroom = async () => {
     const user = auth.currentUser;
     if (user) {
@@ -45,14 +44,35 @@ const ClassroomManagement = () => {
         },
       });
       setClassrooms([...classrooms, { id: Date.now().toString(), info: newClassroom }]);
+      setNewClassroom({ name: '', code: '', room: '', photo: '' });
+    }
+  };
+
+  const handleUpdateClassroom = async (id, updatedInfo) => {
+    const user = auth.currentUser;
+    if (user) {
+      const classroomRef = doc(db, 'classroom', id);
+      await updateDoc(classroomRef, { info: updatedInfo });
+      setClassrooms(classrooms.map(classroom => classroom.id === id ? { id, info: updatedInfo } : classroom));
+      setEditingClassroom(null);
+    }
+  };
+
+  const handleDeleteClassroom = async (id) => {
+    const user = auth.currentUser;
+    if (user) {
+      const confirmation = window.confirm("Are you sure you want to delete this classroom?");
+      if (confirmation) {
+        const classroomRef = doc(db, 'classroom', id);
+        await deleteDoc(classroomRef);
+        setClassrooms(classrooms.filter(classroom => classroom.id !== id));
+      }
     }
   };
 
   return (
     <div>
       <h2>Manage Your Classrooms</h2>
-
-      {/* Form to create a new classroom */}
       <div>
         <h3>Create New Classroom</h3>
         <input
@@ -82,22 +102,54 @@ const ClassroomManagement = () => {
         <button onClick={handleCreateClassroom}>Create Classroom</button>
       </div>
 
-      {/* List of classrooms */}
       <h3>Your Classrooms</h3>
       <ul>
-        {classrooms.length > 0 ? (
-          classrooms.map((classroom) => (
-            <li key={classroom.id}>
-              {classroom.info && classroom.info.name ? (
-                <span>{classroom.info.name}</span> // Display the name of the classroom
+        {classrooms.map((classroom, index) => (
+          <li key={index}>
+            <div>
+              {editingClassroom === classroom.id ? (
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Classroom Name"
+                    value={classroom.info.name}
+                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, name: e.target.value } } : c))}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Classroom Code"
+                    value={classroom.info.code}
+                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, code: e.target.value } } : c))}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Classroom Room"
+                    value={classroom.info.room}
+                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, room: e.target.value } } : c))}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Classroom Photo URL"
+                    value={classroom.info.photo}
+                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, photo: e.target.value } } : c))}
+                  />
+                  <button onClick={() => handleUpdateClassroom(classroom.id, classroom.info)}>Save</button>
+                  <button onClick={() => setEditingClassroom(null)}>Cancel</button>
+                </div>
               ) : (
-                <span>Classroom name is not available</span>
+                <div>
+                  <h4>{classroom.info.name || 'No name available'}</h4>
+                  <p>{classroom.info.code || 'No code available'}</p>
+                  <p>{classroom.info.room || 'No room available'}</p>
+                  <img src={classroom.info.photo} alt="Classroom" style={{ width: '100px' }} />
+                  <QRCodeCanvas value={`https://yourapp.com/classroom/${classroom.id}`} />
+                  <button onClick={() => setEditingClassroom(classroom.id)}>Edit</button>
+                  <button onClick={() => handleDeleteClassroom(classroom.id)}>Delete</button>
+                </div>
               )}
-            </li>
-          ))
-        ) : (
-          <li>No classrooms available</li>
-        )}
+            </div>
+          </li>
+        ))}
       </ul>
     </div>
   );
