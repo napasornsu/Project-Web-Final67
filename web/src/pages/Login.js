@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react';
-import { auth, db } from '../firebaseConfig';  // นำเข้า firebaseConfig
+import { auth, db } from '../firebaseConfig';  
 import { useNavigate } from 'react-router-dom';
-import { doc, setDoc, getDoc } from "firebase/firestore"; // Import Firestore functions
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions
+import { doc, setDoc, getDoc } from "firebase/firestore"; 
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'; 
+import './Login.css'; // Import the CSS file
 
 // ฟังก์ชันบันทึกข้อมูลผู้ใช้
 const saveUserData = async () => {
-  const user = auth.currentUser;  // รับข้อมูลผู้ใช้จาก Firebase Authentication
+  const user = auth.currentUser;  
   if (user) {
-    const userRef = doc(db, 'users', user.uid); // ใช้ UID ของผู้ใช้เป็น document ID
+    const userRef = doc(db, 'users', user.uid); 
     const userDoc = await getDoc(userRef);
     if (!userDoc.exists()) {
       await setDoc(userRef, {
-        name: user.displayName,   // ชื่อผู้ใช้
-        email: user.email,        // อีเมลผู้ใช้
-        photo: user.photoURL,     // รูปโปรไฟล์
-        classroom: {},            // สามารถเพิ่มข้อมูลห้องเรียนที่ผู้ใช้เข้าร่วมในภายหลัง
+        name: user.displayName,   
+        email: user.email,        
+        photo: user.photoURL,     
+        classroom: {},            
       });
     }
   }
@@ -25,28 +26,26 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isSignup, setIsSignup] = useState(false); // เพิ่มสถานะการเลือกสมัครสมาชิก
+  const [isSignup, setIsSignup] = useState(false); 
   const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        saveUserData();  // บันทึกข้อมูลผู้ใช้เมื่อผู้ใช้ลงชื่อเข้าใช้
-        navigate('/home');  // หากผู้ใช้ล็อกอินสำเร็จไปหน้า home
+        saveUserData();  
+        navigate('/home');  
       }
     });
 
-    return () => unsubscribe(); // Cleanup on component unmount
+    return () => unsubscribe(); 
   }, [navigate]);
 
   const handleEmailPasswordLogin = async () => {
     try {
       if (isSignup) {
-        // หากเป็นการสมัครสมาชิก
         await createUserWithEmailAndPassword(auth, email, password);
-        await saveUserData(); // บันทึกข้อมูลผู้ใช้หลังจากสมัครสมาชิกสำเร็จ
+        await saveUserData(); 
       } else {
-        // หากเป็นการล็อกอิน
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (error) {
@@ -81,13 +80,13 @@ const Login = () => {
   };
 
   return (
-    <div>
+    <div className="login-container">
       {/* Login with Google */}
-      <button onClick={async () => {
+      <button className="google-login-btn" onClick={async () => {
         try {
           const provider = new GoogleAuthProvider();
           await signInWithPopup(auth, provider);
-          await saveUserData(); // บันทึกข้อมูลผู้ใช้หลังจากล็อกอินด้วย Google สำเร็จ
+          await saveUserData(); 
         } catch (error) {
           console.error("Login error: ", error);
         }
@@ -96,29 +95,31 @@ const Login = () => {
       </button>
 
       {/* Login or Signup with Email and Password */}
-      <div>
+      <div className="email-password-container">
         <input
+          className="input-field"
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
+          className="input-field"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button onClick={handleEmailPasswordLogin}>
+        <button className="submit-btn" onClick={handleEmailPasswordLogin}>
           {isSignup ? "Sign Up" : "Login"}
         </button>
       </div>
 
       {/* Display error message */}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error-message">{error}</p>}
 
       {/* Toggle between Login and Signup */}
-      <div>
+      <div className="toggle-link">
         <span onClick={() => setIsSignup(!isSignup)}>
           {isSignup ? "Already have an account? Login" : "Don't have an account? Sign Up"}
         </span>

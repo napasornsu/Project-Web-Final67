@@ -1,0 +1,101 @@
+/* Profile Container */
+.profile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    max-width: 500px;
+    margin: 50px auto 0; /* เพิ่ม margin-top เพื่อเลื่อนลงมาข้างล่าง */
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    height: auto; /* ปรับให้ความสูงเป็นอัตโนมัติตามเนื้อหา */
+    min-height: 400px; /* กำหนดความสูงขั้นต่ำ */
+    text-align: center;
+  }
+  
+  /* Profile Title */
+  .profile-container h2 {
+    font-size: 2.5rem;
+    color: #333333;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  
+  /* Profile Image */
+  .profile-container img {
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    margin-bottom: 25px;
+    border: 3px solid #e1e1e1;
+  }
+  
+  /* Input Fields */
+  .profile-container input {
+    width: 80%;
+    padding: 12px;
+    margin: 12px 0;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    color: #333;
+    transition: border 0.3s ease;
+  }
+  
+  .profile-container input:focus {
+    border-color: #4CAF50;
+    outline: none;
+  }
+  
+  /* Buttons */
+  .profile-container button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 30px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .profile-container button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Edit Mode */
+  .edit-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* View Mode */
+  .view-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Button: Back to Home */
+  .profile-container .back-home-button {
+    background-color: transparent;
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+    font-size: 1rem;
+    padding: 10px 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .profile-container .back-home-button:hover {
+    background-color: #f1f1f1;
+  }
+  

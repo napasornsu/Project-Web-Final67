@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import { QRCodeCanvas } from 'qrcode.react';
+import { useNavigate } from 'react-router-dom'; // import useNavigate
+import './ClassroomManagement.css';
 
 const ClassroomManagement = () => {
   const [classrooms, setClassrooms] = useState([]);
@@ -12,6 +14,8 @@ const ClassroomManagement = () => {
     photo: '',
   });
   const [editingClassroom, setEditingClassroom] = useState(null);
+  
+  const navigate = useNavigate(); // ใช้ useNavigate สำหรับนำทาง
 
   useEffect(() => {
     const fetchClassrooms = async () => {
@@ -47,14 +51,19 @@ const ClassroomManagement = () => {
       setNewClassroom({ name: '', code: '', room: '', photo: '' });
     }
   };
-
+  
   const handleUpdateClassroom = async (id, updatedInfo) => {
     const user = auth.currentUser;
     if (user) {
       const classroomRef = doc(db, 'classroom', id);
-      await updateDoc(classroomRef, { info: updatedInfo });
-      setClassrooms(classrooms.map(classroom => classroom.id === id ? { id, info: updatedInfo } : classroom));
-      setEditingClassroom(null);
+      try {
+        await updateDoc(classroomRef, { info: updatedInfo });
+        setClassrooms(classrooms.map(classroom => classroom.id === id ? { id, info: updatedInfo } : classroom));
+        setEditingClassroom(null);
+      } catch (error) {
+        console.error("Error updating classroom: ", error);
+        alert("Failed to update classroom. Please try again.");
+      }
     }
   };
 
@@ -71,9 +80,10 @@ const ClassroomManagement = () => {
   };
 
   return (
-    <div>
+    <div className="classroom-container">
       <h2>Manage Your Classrooms</h2>
-      <div>
+
+      <div className="create-classroom-section">
         <h3>Create New Classroom</h3>
         <input
           type="text"
@@ -103,7 +113,7 @@ const ClassroomManagement = () => {
       </div>
 
       <h3>Your Classrooms</h3>
-      <ul>
+      <ul className="classroom-list">
         {classrooms.map((classroom, index) => (
           <li key={index}>
             <div>
@@ -138,19 +148,24 @@ const ClassroomManagement = () => {
                 </div>
               ) : (
                 <div>
+                  <img src={classroom.info.photo} alt="Classroom" />
                   <h4>{classroom.info.name || 'No name available'}</h4>
                   <p>{classroom.info.code || 'No code available'}</p>
                   <p>{classroom.info.room || 'No room available'}</p>
-                  <img src={classroom.info.photo} alt="Classroom" style={{ width: '100px' }} />
-                  <QRCodeCanvas value={`https://yourapp.com/classroom/${classroom.id}`} />
+                  <div className="qr-code">
+                    <QRCodeCanvas value={`https://yourapp.com/classroom/${classroom.id}`} />
+                  </div>
                   <button onClick={() => setEditingClassroom(classroom.id)}>Edit</button>
-                  <button onClick={() => handleDeleteClassroom(classroom.id)}>Delete</button>
+                  <button className="delete-button" onClick={() => handleDeleteClassroom(classroom.id)}>Delete</button>
                 </div>
               )}
             </div>
           </li>
         ))}
       </ul>
+
+      {/* ปุ่มกลับไปหน้า Home */}
+      <button className="back-home-button" onClick={() => navigate('/')}>Back to Home</button>
     </div>
   );
 };

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc, collection, getDocs } from "firebase/firestore"; // Import Firestore functions
+import { doc, getDoc } from "firebase/firestore"; // Import Firestore functions
+import './Home.css'; // Import the CSS file
 
 const Home = () => {
   const [userData, setUserData] = useState(null);
-  const [classrooms, setClassrooms] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,13 +16,6 @@ const Home = () => {
         const userRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userRef);
         setUserData(userDoc.data());
-
-        // const classroomData = [];
-        // const classroomSnapshot = await getDocs(collection(db, 'classroom'));
-        // classroomSnapshot.forEach((doc) => {
-        //   classroomData.push({ cid: doc.id, info: doc.data() });
-        // });
-        // setClassrooms(classroomData);
       };
       fetchUserData();
     } else {
@@ -41,28 +34,21 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <div className="home-container">
       {userData && (
         <div>
           <h2>Welcome, {userData.name}</h2>
           <img src={userData.photo} alt="Profile" />
-          {/* <h3>Your Classrooms</h3>
-          <ul>
-            {classrooms.map((classroom) => (
-              <li key={classroom.cid}>
-                {classroom.info?.name} - {classroom.info?.code}
-              </li>
-            ))}
-          </ul> */}
+          <div className="button-container">
+            {/* ปุ่มนำทางไปยังหน้า Profile */}
+            <button onClick={() => navigate('/profile')}>Go to Profile</button>
 
-          {/* ปุ่มนำทางไปยังหน้า Profile */}
-          <button onClick={() => navigate('/profile')}>Go to Profile</button>
+            {/* ปุ่มนำทางไปยังหน้า Classroom Management */}
+            <button onClick={() => navigate('/classroom-management')}>Manage Classrooms</button>
 
-          {/* ปุ่มนำทางไปยังหน้า Classroom Management */}
-          <button onClick={() => navigate('/classroom-management')}>Manage Classrooms</button>
-
-          {/* ปุ่ม Logout */}
-          <button onClick={handleLogout}>Logout</button>
+            {/* ปุ่ม Logout */}
+            <button className="logout-button" onClick={handleLogout}>Logout</button>
+          </div>
         </div>
       )}
     </div>

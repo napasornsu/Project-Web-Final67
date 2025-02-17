@@ -1,0 +1,136 @@
+/* Classroom Management Container */
+.classroom-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 600px;
+    margin: 50px auto;
+  }
+  
+  /* Section Title */
+  .classroom-container h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  /* New Classroom Section */
+  .create-classroom-section {
+    width: 100%;
+    margin-bottom: 30px;
+  }
+  
+  .create-classroom-section input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    background-color: #f9f9f9;
+  }
+  
+  .create-classroom-section button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    width: 100%;
+  }
+  
+  .create-classroom-section button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Classroom List */
+  .classroom-list {
+    list-style-type: none;
+    padding: 0;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .classroom-list li {
+    background-color: #f9f9f9;
+    margin: 15px 0;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .classroom-list li img {
+    border-radius: 8px;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+  
+  .classroom-list li h4 {
+    font-size: 1.2em;
+    color: #333;
+    margin: 10px 0;
+  }
+  
+  .classroom-list li p {
+    color: #777;
+    margin: 5px 0;
+  }
+  
+  .classroom-list li button {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 15px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+  }
+  
+  .classroom-list li button:hover {
+    background-color: #0056b3;
+  }
+  
+  .classroom-list li .delete-button {
+    background-color: #dc3545;
+  }
+  
+  .classroom-list li .delete-button:hover {
+    background-color: #c82333;
+  }
+  
+  .qr-code {
+    margin-top: 15px;
+  }
+  
+/* Button: Back to Home */
+.classroom-container .back-home-button {
+    background-color: transparent;
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+    font-size: 1rem;
+    padding: 10px 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .classroom-container .back-home-button:hover {
+    background-color: #f1f1f1;
+  }
+  
+  
