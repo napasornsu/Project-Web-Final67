@@ -23,6 +23,7 @@ const App = () => {
   }, []);
 
   return (
+    <Router basename="/Project-Web-Final67">
     <Router>
       <div className="App">
         <Routes>
@@ -53,6 +54,7 @@ const App = () => {
           />
         </Routes>
       </div>
+    </Router>
     </Router>
   );
 };
