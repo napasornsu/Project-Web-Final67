@@ -1,136 +1,274 @@
-/* Classroom Management Container */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100vh;
+  background: url('https://www.transparenttextures.com/patterns/black-paper.png'),
+              linear-gradient(135deg, #1e3c72, #2a5298);
+  color: white;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* กรอบสำหรับหน้า Welcome */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+}
+
+.welcome-container h2 {
+  font-size: 2em;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  color: white;
+}
+
+/* ปุ่ม Back to Home */
+.back-to-home {
+  background: none;
+  border: 1px solid #42e695;
+  color: #42e695;
+  padding: 8px 15px;
+  margin-top: 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.back-to-home:hover {
+  background-color: #42e695;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Container for the classroom management */
 .classroom-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 600px;
-    margin: 50px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 30px 25px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 1s ease-in-out;
+  position: relative;
+  overflow-y: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
   }
-  
-  /* Section Title */
-  .classroom-container h2 {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #333;
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
-  
-  /* New Classroom Section */
-  .create-classroom-section {
-    width: 100%;
-    margin-bottom: 30px;
-  }
-  
-  .create-classroom-section input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1em;
-    background-color: #f9f9f9;
-  }
-  
-  .create-classroom-section button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    width: 100%;
-  }
-  
-  .create-classroom-section button:hover {
-    background-color: #45a049;
-  }
-  
-  /* Classroom List */
-  .classroom-list {
-    list-style-type: none;
-    padding: 0;
-    width: 100%;
-    text-align: center;
-  }
-  
-  .classroom-list li {
-    background-color: #f9f9f9;
-    margin: 15px 0;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .classroom-list li img {
-    border-radius: 8px;
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    margin-bottom: 10px;
-  }
-  
-  .classroom-list li h4 {
-    font-size: 1.2em;
-    color: #333;
-    margin: 10px 0;
-  }
-  
-  .classroom-list li p {
-    color: #777;
-    margin: 5px 0;
-  }
-  
-  .classroom-list li button {
-    background-color: #007bff;
-    color: white;
-    padding: 8px 15px;
-    margin: 5px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-  }
-  
-  .classroom-list li button:hover {
-    background-color: #0056b3;
-  }
-  
-  .classroom-list li .delete-button {
-    background-color: #dc3545;
-  }
-  
-  .classroom-list li .delete-button:hover {
-    background-color: #c82333;
-  }
-  
-  .qr-code {
-    margin-top: 15px;
-  }
-  
-/* Button: Back to Home */
-.classroom-container .back-home-button {
-    background-color: transparent;
-    color: #4CAF50;
-    border: 1px solid #4CAF50;
-    font-size: 1rem;
-    padding: 10px 20px;
-    margin-top: 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .classroom-container .back-home-button:hover {
-    background-color: #f1f1f1;
-  }
-  
-  
+}
+
+/* Title styling */
+h2 {
+  font-size: 2em;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+/* Input fields and buttons */
+.create-classroom-section input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  outline: none;
+  text-align: center;
+}
+
+.create-classroom-section input::placeholder {
+  color: #ddd;
+}
+
+.create-classroom-section button {
+  background: linear-gradient(135deg, #ff7eb3, #ff758c);
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1em;
+  width: 100%;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.create-classroom-section button:hover {
+  background: linear-gradient(135deg, #ff589b, #ff6f61);
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 94, 77, 0.3);
+}
+
+/* List of classrooms */
+.classroom-list {
+  list-style-type: none;
+  padding: 0;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.classroom-list li {
+  background: rgba(255, 255, 255, 0.1);
+  margin: 15px 0;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.classroom-list li:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+}
+
+.classroom-list li h4 {
+  font-size: 1.4em;
+  color: #fff;
+  margin: 10px 0;
+  font-weight: 600;
+}
+
+.classroom-list li button {
+  background: linear-gradient(135deg, #42e695, #3bb2b8);
+  color: white;
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.classroom-list li button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(66, 230, 149, 0.3);
+}
+
+.classroom-list li .delete-button {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+}
+
+.classroom-list li .delete-button:hover {
+  background: linear-gradient(135deg, #ff0022, #d6001a);
+}
+
+/* Edit Classroom Modal */
+.edit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.edit-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.edit-container {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.edit-container h3 {
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  color: #fff;
+}
+
+.edit-container input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  outline: none;
+  text-align: center;
+}
+
+.edit-container input::placeholder {
+  color: #ddd;
+}
+
+.edit-container button {
+  background: linear-gradient(135deg, #42e695, #3bb2b8);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 15px;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.edit-container button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(66, 230, 149, 0.3);
+}
+
+.edit-container .cancel-button {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  margin-top: 10px;
+}
+
+.edit-container .cancel-button:hover {
+  background: linear-gradient(135deg, #ff0022, #d6001a);
+}
