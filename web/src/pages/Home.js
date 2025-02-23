@@ -46,6 +46,9 @@ const Home = () => {
             {/* ปุ่มนำทางไปยังหน้า Classroom Management */}
             <button onClick={() => navigate('/classroom-management')}>Manage Classrooms</button>
 
+            {/* ปุ่มไปทำคำถาม */}
+            <button className="back-home-button" onClick={() => navigate('/ManagementQA')}>Make Q&A</button>
+
             {/* ปุ่ม Logout */}
             <button className="logout-button" onClick={handleLogout}>Logout</button>
           </div>

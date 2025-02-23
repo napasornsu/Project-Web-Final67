@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import ClassroomManagement from "./pages/ClassroomManagement";
+import ManagementQA from "./pages/ManagementQA";
 import { auth } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -48,6 +49,12 @@ const App = () => {
           path="/classroom-management"
           element={
             user ? <ClassroomManagement /> : <Navigate to="/login" />
+          }
+        />
+        {/* Protected Route for Management Q&A*/}
+        <Route
+          path="/ManagementQA"
+          element={user ? <ManagementQA /> : <Navigate to="/login" />
           }
         />
       </Routes>
