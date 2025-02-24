@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, Alert, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { db, auth } from '../../src/config/firebaseConfig';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 interface Classroom {
@@ -18,6 +18,13 @@ interface Classroom {
 const ClassScreen = () => {
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
+  const [checkinCno, setCheckinCno] = useState('');
+  const [checkinCode, setCheckinCode] = useState('');
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  const [quizCno, setQuizCno] = useState('');
+  const [quizQno, setQuizQno] = useState('');
+  const [quizAnswer, setQuizAnswer] = useState('');
   const router = useRouter();
   const { classId } = useLocalSearchParams();
 
@@ -43,6 +50,29 @@ const ClassScreen = () => {
     fetchClassroom();
   }, [classId]);
 
+  // Real-time listener for quiz question_show
+  useEffect(() => {
+    if (!classroom || !auth.currentUser) return;
+
+    const checkinRef = doc(db, `classroom/${classId}/checkin`, '1'); // Assuming cno = '1'; adjust if dynamic
+    const unsubscribe = onSnapshot(checkinRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data.question_show === true) {
+          setQuizCno('1'); // Adjust if dynamic
+          setQuizQno('1'); // Adjust if dynamic
+          setShowQuizModal(true);
+        } else {
+          setShowQuizModal(false);
+        }
+      }
+    }, (error) => {
+      console.error('Error listening to check-in:', error);
+    });
+
+    return () => unsubscribe();
+  }, [classroom, classId]);
+
   const handleBackPress = () => {
     router.push('/');
   };
@@ -54,33 +84,114 @@ const ClassScreen = () => {
     }
 
     try {
-      const userRef = doc(db, 'users', auth.currentUser.uid);
-      const userSnap = await getDoc(userRef);
+      const userClassroomRef = doc(db, `users/${auth.currentUser.uid}/classroom`, classId as string);
+      const userClassroomSnap = await getDoc(userClassroomRef);
 
-      if (!userSnap.exists()) {
-        Alert.alert('Error', 'User data not found.');
-        return;
-      }
-
-      const userData = userSnap.data();
-      const currentClassrooms = userData.classroom || {};
-
-      // Check if the classroom is in the user's list
-      const classroomCode = classroom?.info.code;
-      if (!classroomCode || !currentClassrooms[classroomCode]) {
+      if (!userClassroomSnap.exists()) {
         Alert.alert('Error', 'You are not enrolled in this classroom.');
+        console.log('Classroom not found in user data:', classId);
         return;
       }
 
-      // Remove the classroom from the user's classroom map
-      delete currentClassrooms[classroomCode];
-      await updateDoc(userRef, { classroom: currentClassrooms });
+      await deleteDoc(userClassroomRef);
+      const studentRef = doc(db, `classroom/${classId}/students`, auth.currentUser.uid);
+      await deleteDoc(studentRef);
 
       Alert.alert('Success', `You have left ${classroom.info.name}.`);
-      router.push('/'); // Navigate back to HomeScreen
+      router.push('/');
     } catch (error) {
       console.error('Error leaving classroom:', error);
       Alert.alert('Error', 'Failed to leave classroom.');
+    }
+  };
+
+  const handleCheckinPress = () => {
+    setShowCheckinModal(true);
+  };
+
+  const handleCheckinSubmit = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'No user logged in.');
+      return;
+    }
+
+    if (!checkinCno.trim() || !checkinCode.trim()) {
+      Alert.alert('Error', 'Please enter both check-in number and code.');
+      return;
+    }
+
+    try {
+      const checkinRef = doc(db, `classroom/${classId}/checkin`, checkinCno);
+      const checkinSnap = await getDoc(checkinRef);
+
+      if (!checkinSnap.exists()) {
+        Alert.alert('Error', 'Check-in session not found.');
+        return;
+      }
+
+      const checkinData = checkinSnap.data();
+      if (checkinData.code !== checkinCode || checkinData.status !== 1) {
+        Alert.alert('Error', 'Invalid check-in code or session is not active.');
+        return;
+      }
+
+      const studentRef = doc(db, `classroom/${classId}/students`, auth.currentUser.uid);
+      const studentSnap = await getDoc(studentRef);
+
+      if (!studentSnap.exists()) {
+        Alert.alert('Error', 'Student data not found for this classroom.');
+        return;
+      }
+
+      const studentData = studentSnap.data();
+      const checkinStudentRef = doc(db, `classroom/${classId}/checkin/${checkinCno}/students`, auth.currentUser.uid);
+      await setDoc(checkinStudentRef, {
+        stdid: studentData.stdid || 'Unknown',
+        name: studentData.name || 'Unknown',
+        date: new Date().toISOString(),
+      });
+
+      Alert.alert('Success', 'Check-in successful!');
+      setShowCheckinModal(false);
+      setCheckinCno('');
+      setCheckinCode('');
+    } catch (error) {
+      console.error('Error during check-in:', error);
+      Alert.alert('Error', 'Failed to check in.');
+    }
+  };
+
+  const handleQuizSubmit = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'No user logged in.');
+      return;
+    }
+
+    if (!quizAnswer.trim()) {
+      Alert.alert('Error', 'Please enter an answer.');
+      return;
+    }
+
+    try {
+      const studentRef = doc(db, `classroom/${classId}/students`, auth.currentUser.uid);
+      const studentSnap = await getDoc(studentRef);
+      if (!studentSnap.exists()) {
+        Alert.alert('Error', 'Student data not found.');
+        return;
+      }
+
+      const studentData = studentSnap.data();
+      const answerRef = doc(db, `classroom/${classId}/checkin/${quizCno}/answers/${quizQno}/students`, studentData.stdid);
+      await setDoc(answerRef, {
+        text: quizAnswer,
+      });
+
+      Alert.alert('Success', 'Answer submitted!');
+      setShowQuizModal(false);
+      setQuizAnswer('');
+    } catch (error) {
+      console.error('Error submitting quiz answer:', error);
+      Alert.alert('Error', 'Failed to submit answer.');
     }
   };
 
@@ -107,7 +218,65 @@ const ClassScreen = () => {
         <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveClassroom}>
           <Text style={styles.buttonText}>Leave Classroom</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.checkinButton} onPress={handleCheckinPress}>
+          <Text style={styles.buttonText}>Check-in</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Check-in Modal */}
+      <Modal visible={showCheckinModal} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Check-in to Class</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Check-in Number (cno)"
+              value={checkinCno}
+              onChangeText={setCheckinCno}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Check-in Code"
+              value={checkinCode}
+              onChangeText={setCheckinCode}
+            />
+            <TouchableOpacity style={styles.submitButton} onPress={handleCheckinSubmit}>
+              <Text style={styles.buttonText}>Submit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelModalButton}
+              onPress={() => setShowCheckinModal(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Quiz Answer Modal */}
+      <Modal visible={showQuizModal} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Answer Quiz</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Your Answer"
+              value={quizAnswer}
+              onChangeText={setQuizAnswer}
+            />
+            <TouchableOpacity style={styles.submitButton} onPress={handleQuizSubmit}>
+              <Text style={styles.buttonText}>Submit Answer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelModalButton}
+              onPress={() => setShowQuizModal(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -137,6 +306,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 30,
+    flexWrap: 'wrap',
   },
   backButton: {
     backgroundColor: '#007BFF',
@@ -145,6 +315,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     maxWidth: 150,
     alignItems: 'center',
+    marginBottom: 10,
   },
   leaveButton: {
     backgroundColor: '#FF4D4D',
@@ -153,11 +324,60 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     maxWidth: 150,
     alignItems: 'center',
+    marginBottom: 10,
+  },
+  checkinButton: {
+    backgroundColor: '#28A745',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    maxWidth: 150,
+    alignItems: 'center',
+    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 5,
+  },
+  submitButton: {
+    backgroundColor: '#28A745',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  cancelModalButton: {
+    backgroundColor: '#FF4D4D',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
   },
 });
 
