@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, Alert, TouchableOpacity, Modal, TextInpu
 import { db, auth } from '../../src/config/firebaseConfig';
 import { doc, getDoc, updateDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Classroom {
   id: string;
@@ -25,6 +26,8 @@ const ClassScreen = () => {
   const [quizCno, setQuizCno] = useState('');
   const [quizQno, setQuizQno] = useState('');
   const [quizAnswer, setQuizAnswer] = useState('');
+  const [checkedInCid, setCheckedInCid] = useState<string | null>(null);
+  const [checkedInCno, setCheckedInCno] = useState<string | null>(null);
   const router = useRouter();
   const { classId } = useLocalSearchParams();
 
@@ -47,21 +50,49 @@ const ClassScreen = () => {
       }
     };
 
+    const loadCheckinStatus = async () => {
+      try {
+        const cid = await AsyncStorage.getItem('checkedInCid');
+        const cno = await AsyncStorage.getItem('checkedInCno');
+        setCheckedInCid(cid);
+        setCheckedInCno(cno);
+      } catch (error) {
+        console.error('Error loading check-in status:', error);
+      }
+    };
+
     fetchClassroom();
+    loadCheckinStatus();
   }, [classId]);
 
-  // Real-time listener for quiz question_show
+  // Real-time listener for quiz question_show with answer check
   useEffect(() => {
-    if (!classroom || !auth.currentUser) return;
+    if (!classroom || !auth.currentUser || !checkedInCid || !checkedInCno || checkedInCid !== classId) return;
 
-    const checkinRef = doc(db, `classroom/${classId}/checkin`, '1'); // Assuming cno = '1'; adjust if dynamic
-    const unsubscribe = onSnapshot(checkinRef, (snapshot) => {
+    const checkinRef = doc(db, `classroom/${checkedInCid}/checkin`, checkedInCno);
+    const unsubscribe = onSnapshot(checkinRef, async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data.question_show === true) {
-          setQuizCno('1'); // Adjust if dynamic
-          setQuizQno('1'); // Adjust if dynamic
-          setShowQuizModal(true);
+          // Fetch student data to get stdid
+          const studentRef = doc(db, `classroom/${checkedInCid}/students`, auth.currentUser.uid);
+          const studentSnap = await getDoc(studentRef);
+          if (!studentSnap.exists()) return;
+          const studentData = studentSnap.data();
+
+          // Check if answer already exists
+          const answerRef = doc(db, `classroom/${checkedInCid}/checkin/${checkedInCno}/answers/${data.qno || '1'}/students`, studentData.stdid);
+          const answerSnap = await getDoc(answerRef);
+          const hasAnswered = answerSnap.exists() && !!answerSnap.data().text;
+
+          // Show modal only if no answer exists
+          if (!hasAnswered) {
+            setQuizCno(checkedInCno);
+            setQuizQno(data.qno || '1');
+            setShowQuizModal(true);
+          } else {
+            setShowQuizModal(false); // Hide if already answered
+          }
         } else {
           setShowQuizModal(false);
         }
@@ -71,7 +102,7 @@ const ClassScreen = () => {
     });
 
     return () => unsubscribe();
-  }, [classroom, classId]);
+  }, [classroom, checkedInCid, checkedInCno, classId]);
 
   const handleBackPress = () => {
     router.push('/');
@@ -151,6 +182,11 @@ const ClassScreen = () => {
         date: new Date().toISOString(),
       });
 
+      await AsyncStorage.setItem('checkedInCno', checkinCno);
+      await AsyncStorage.setItem('checkedInCid', classId as string);
+      setCheckedInCid(classId as string);
+      setCheckedInCno(checkinCno);
+
       Alert.alert('Success', 'Check-in successful!');
       setShowCheckinModal(false);
       setCheckinCno('');
@@ -215,11 +251,11 @@ const ClassScreen = () => {
         <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
           <Text style={styles.buttonText}>Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveClassroom}>
-          <Text style={styles.buttonText}>Leave Classroom</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.checkinButton} onPress={handleCheckinPress}>
           <Text style={styles.buttonText}>Check-in</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveClassroom}>
+          <Text style={styles.buttonText}>Leave Classroom</Text>
         </TouchableOpacity>
       </View>
 
