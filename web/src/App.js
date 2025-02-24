@@ -4,6 +4,8 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import ClassroomManagement from "./pages/ClassroomManagement";
+import Checkin from "./pages/Checkin"; // Import Checkin component
+import StudentList from "./pages/StudentList"; // Import StudentList component
 import { auth } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -49,6 +51,18 @@ const App = () => {
           element={
             user ? <ClassroomManagement /> : <Navigate to="/login" />
           }
+        />
+
+        {/* Route for Checkin page */}
+        <Route
+          path="/checkin/:classroomId"
+          element={user ? <Checkin /> : <Navigate to="/login" />}
+        />
+
+        {/* Route for Student List page */}
+        <Route
+          path="/student-list/:classroomId"
+          element={user ? <StudentList /> : <Navigate to="/login" />}
         />
       </Routes>
     </div>

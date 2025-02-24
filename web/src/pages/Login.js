@@ -3,7 +3,7 @@ import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import { doc, setDoc, getDoc } from "firebase/firestore"; 
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'; 
-import './Login.css'; // Import the CSS file
+import '../css/Login.css'; // Import the CSS file
 
 // ฟังก์ชันบันทึกข้อมูลผู้ใช้
 const saveUserData = async () => {

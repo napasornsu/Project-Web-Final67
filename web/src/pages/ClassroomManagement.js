@@ -3,7 +3,7 @@ import { db, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import { QRCodeCanvas } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom'; // import useNavigate
-import './ClassroomManagement.css';
+import '../css/ClassroomManagement.css';
 
 const ClassroomManagement = () => {
   const [classrooms, setClassrooms] = useState([]);
@@ -157,6 +157,10 @@ const ClassroomManagement = () => {
                   </div>
                   <button onClick={() => setEditingClassroom(classroom.id)}>Edit</button>
                   <button className="delete-button" onClick={() => handleDeleteClassroom(classroom.id)}>Delete</button>
+                  {/* ปุ่มแสดงตารางรายชื่อนักเรียนที่ลงทะเบียน */}
+                  <button className="student-list-button" onClick={() => navigate(`/student-list/${classroom.id}`)}>Show Student List</button>
+                  {/* ปุ่มเพิ่มการเช็คชื่อ */}
+                  <button className="checkin-button" onClick={() => navigate(`/Checkin/${classroom.id}`)}>Add Check-in</button>
                 </div>
               )}
             </div>

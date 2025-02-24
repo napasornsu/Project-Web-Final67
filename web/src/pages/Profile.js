@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebaseConfig';
 import { doc, getDoc, updateDoc } from "firebase/firestore"; // Import Firestore functions
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
-import './Profile.css'; // Import the CSS file
+import '../css/Profile.css'; // Import the CSS file
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
