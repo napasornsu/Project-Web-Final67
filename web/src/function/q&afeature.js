@@ -1,30 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { QRCodeCanvas } from 'qrcode.react';
-import { useNavigate } from 'react-router-dom'; // import useNavigate
+import { getDatabase, ref, update, set, push } from "firebase/database";
 
 /**
- * ฟังก์ชันสร้างคำถามในระบบเช็คชื่อ
+ * ฟังก์ชันสร้างคำถามใน Realtime Database
  * @param {string} cid - รหัสห้องเรียน
  * @param {string} cno - รหัสการเช็คชื่อ (Check-in Number)
- * @param {string} questionNo - หมายเลขคำถาม
+ * @param {number} questionNo - หมายเลขคำถาม
  * @param {string} questionText - ข้อความของคำถาม
  */
 export const createQuestion = async (cid, cno, questionNo, questionText) => {
   try {
-    // อ้างอิงไปที่เอกสารของการเช็คชื่อใน Firebase
-    const questionRef = db
-      .collection("classroom")
-      .doc(cid)
-      .collection("checkin")
-      .doc(cno);
+    const db = getDatabase();
+    const questionRef = ref(db, `/classroom/${cid}/checkin/${cno}/question`);
 
-    // อัปเดตข้อมูลของคำถามในเอกสารนั้น
-    await questionRef.update({
+    // อัปเดตคำถามใน Firebase
+    await set(questionRef, {
       question_no: questionNo,
       question_text: questionText,
-      question_show: true, // กำหนดให้แสดงคำถาม
+      question_show: true,
     });
 
     console.log(`✅ คำถามถูกสร้างสำเร็จ: ${questionText}`);
@@ -37,34 +29,27 @@ export const createQuestion = async (cid, cno, questionNo, questionText) => {
  * ฟังก์ชันส่งคำตอบของนักเรียน
  * @param {string} cid - รหัสห้องเรียน
  * @param {string} cno - รหัสการเช็คชื่อ (Check-in Number)
- * @param {string} questionNo - หมายเลขคำถาม
+ * @param {number} questionNo - หมายเลขคำถาม
  * @param {string} uid - รหัสนักเรียนที่ตอบคำถาม
  * @param {string} answerText - คำตอบของนักเรียน
  */
 export const submitAnswer = async (cid, cno, questionNo, uid, answerText) => {
   try {
-    // อ้างอิงไปที่เอกสารคำตอบของคำถามนั้นใน Firebase
-    const answerRef = db
-      .collection("classroom")
-      .doc(cid)
-      .collection("checkin")
-      .doc(cno)
-      .collection("answers")
-      .doc(questionNo);
+    const db = getDatabase();
+    const answerRef = ref(db, `/classroom/${cid}/checkin/${cno}/answers/${questionNo}/students/${uid}`);
 
-    // อัปเดตหรือสร้างข้อมูลคำตอบของนักเรียน
-    await answerRef.set(
-      {
-        [`students.${uid}.text`]: answerText,
-        [`students.${uid}.time`]: new Date().toISOString(), // เวลาที่ส่งคำตอบ
-      },
-      { merge: true } // ใช้ merge เพื่อไม่ให้ข้อมูลเก่าหายไป
-    );
+    // บันทึกคำตอบของนักเรียน
+    await set(answerRef, {
+      text: answerText,
+      time: new Date().toISOString(),
+    });
 
     console.log(`✅ นักเรียน ${uid} ส่งคำตอบสำเร็จ: ${answerText}`);
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาดในการส่งคำตอบ:", error);
   }
+};
+
   {/* สำหรับนักเรียน */}
         {/* {isQuestionVisible && (
         <div>
@@ -93,4 +78,4 @@ export const submitAnswer = async (cid, cno, questionNo, uid, answerText) => {
           </ul>
         </div>
       )} */}
-};
+
