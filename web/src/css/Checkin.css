@@ -1,0 +1,71 @@
+.checkin-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  .checkin-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 20px;
+  }
+  
+  .checkin-header button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+  }
+  
+  .checkin-header button:hover {
+    background-color: #45a049;
+  }
+  
+  .students-list, .scores-list {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 20px;
+  }
+  
+  .students-list table, .scores-list table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .students-list th, .scores-list th, .students-list td, .scores-list td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .students-list th, .scores-list th {
+    background-color: #f2f2f2;
+    text-align: left;
+  }
+  
+  .students-list tr:nth-child(even), .scores-list tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .students-list tr:hover, .scores-list tr:hover {
+    background-color: #ddd;
+  }
+  
+  .students-list td button, .scores-list td button {
+    background-color: #f44336;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .students-list td button:hover, .scores-list td button:hover {
+    background-color: #e53935;
+  }

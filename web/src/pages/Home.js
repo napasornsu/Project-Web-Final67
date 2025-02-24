@@ -3,7 +3,7 @@ import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from "firebase/firestore"; // Import Firestore functions
-import './Home.css'; // Import the CSS file
+import '../css/Home.css'; // Import the CSS file
 
 const Home = () => {
   const [userData, setUserData] = useState(null);
