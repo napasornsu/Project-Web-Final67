@@ -108,6 +108,8 @@ const Checkin = () => {
         <button onClick={handleEndCheckin}>End Check-in</button>
         <button onClick={handleSaveCheckin}>Save Check-in</button>
         <button onClick={() => alert(`Check-in Code: ${code}`)}>Show Check-in Code</button>
+        {/* ปุ่มไปทำคำถาม */}
+        <button className="back-home-button" onClick={() => navigate('/ManagementQA')}>Make Q&A</button>
         <QRCodeCanvas value={`https://yourapp.com/checkin/${classroomId}/${cno}`} />
       </div>
       

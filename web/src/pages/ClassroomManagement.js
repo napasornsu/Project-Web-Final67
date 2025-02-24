@@ -14,7 +14,7 @@ const ClassroomManagement = () => {
     photo: '',
   });
   const [editingClassroom, setEditingClassroom] = useState(null);
-  
+
   const navigate = useNavigate(); // ใช้ useNavigate สำหรับนำทาง
 
   useEffect(() => {
@@ -51,7 +51,7 @@ const ClassroomManagement = () => {
       setNewClassroom({ name: '', code: '', room: '', photo: '' });
     }
   };
-  
+
   const handleUpdateClassroom = async (id, updatedInfo) => {
     const user = auth.currentUser;
     if (user) {
@@ -170,6 +170,7 @@ const ClassroomManagement = () => {
 
       {/* ปุ่มกลับไปหน้า Home */}
       <button className="back-home-button" onClick={() => navigate('/')}>Back to Home</button>
+
     </div>
   );
 };

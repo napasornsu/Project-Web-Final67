@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import ClassroomManagement from "./pages/ClassroomManagement";
+import ManagementQA from "./pages/ManagementQA";
 import Checkin from "./pages/Checkin"; // Import Checkin component
 import StudentList from "./pages/StudentList"; // Import StudentList component
 import { auth } from "./firebaseConfig";
@@ -52,7 +53,12 @@ const App = () => {
             user ? <ClassroomManagement /> : <Navigate to="/login" />
           }
         />
-
+        {/* Protected Route for Management Q&A*/}
+        <Route
+          path="/ManagementQA"
+          element={user ? <ManagementQA /> : <Navigate to="/login" />
+          }
+        />
         {/* Route for Checkin page */}
         <Route
           path="/checkin/:classroomId"
