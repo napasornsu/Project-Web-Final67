@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, set, update, push, onValue } from 'firebase/database';
+import { ref, set, update, push, onValue } from 'firebase/database';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createQuestion, submitAnswer } from "../function/q&afeature.js";
+import { realtimeDb } from '../firebaseConfig'; // Import realtimeDb from firebaseConfig.js
 import '../css/ManagementQA.css';
 
 const ManagementQA = () => {
@@ -13,7 +13,6 @@ const ManagementQA = () => {
   const [answerText, setAnswerText] = useState('');  // เพิ่ม useState สำหรับเก็บคำตอบ
 
   const { cid, cno } = useParams();  // ใช้ useParams เพื่อดึง cid และ cno จาก URL
-  const db = getDatabase();
   const navigate = useNavigate();
 
   // ฟังการเปลี่ยนแปลงคำตอบจาก Firebase
@@ -23,7 +22,7 @@ const ManagementQA = () => {
       return;
     }
 
-    const answersRef = ref(db, `/classroom/${cid}/checkin/${cno}/answers/${questionNo}`);
+    const answersRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/answers/${questionNo}`);
     const handleSnapshot = (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -37,14 +36,37 @@ const ManagementQA = () => {
 
     // ทำการยกเลิกการฟังข้อมูลเมื่อคอมโพเนนต์ unmount
     return () => unsubscribe();
-  }, [cid, cno, questionNo, db]);
+  }, [cid, cno, questionNo]);
+
+  // ฟังการเปลี่ยนแปลงคำถามที่ปิดแล้วจาก Firebase
+  useEffect(() => {
+    if (!cid || !cno) {
+      console.error("Missing cid or cno in URL params");
+      return;
+    }
+
+    const closedQuestionsRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/closedQuestions`);
+    const handleSnapshot = (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // อัปเดตรายการคำถามที่ปิดแล้ว
+        setClosedQuestions(Object.values(data));
+      }
+    };
+
+    // ฟังข้อมูลคำถามที่ปิดแล้วจาก Firebase
+    const unsubscribe = onValue(closedQuestionsRef, handleSnapshot);
+
+    // ทำการยกเลิกการฟังข้อมูลเมื่อคอมโพเนนต์ unmount
+    return () => unsubscribe();
+  }, [cid, cno]);
 
   // ฟังก์ชันเพื่อเริ่มหรือปิดคำถาม
   useEffect(() => {
-    const questionRef = ref(db, `/classroom/${cid}/checkin/${cno}`);
+    const questionRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}`);
     if (isQuestionVisible) {
       // เก็บข้อมูลคำถามใน Firebase
-      const newQuestionRef = push(ref(db, `/classroom/${cid}/checkin/${cno}/questions`));
+      const newQuestionRef = push(ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/questions`));
       set(newQuestionRef, {
         question_no: questionNo,
         question_text: questionText,
@@ -55,12 +77,12 @@ const ManagementQA = () => {
         question_show: false
       });
     }
-  }, [isQuestionVisible, questionNo, questionText, cid, cno, db]);
+  }, [isQuestionVisible, questionNo, questionText, cid, cno]);
 
   // ฟังก์ชันสำหรับการตอบคำถาม
   const handleAnswerSubmit = (answerText) => {
     const studentId = "student1"; // แทนที่ด้วย ID ของนักเรียนที่แท้จริง
-    const answerRef = ref(db, `/classroom/${cid}/checkin/${cno}/answers/${questionNo}/students/${studentId}`);
+    const answerRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/answers/${questionNo}/students/${studentId}`);
     set(answerRef, {
       text: answerText,
       time: new Date().toISOString()
@@ -72,13 +94,22 @@ const ManagementQA = () => {
   };
 
   const handleEndQuestion = () => {
-    // เมื่อปิดคำถามแล้ว ย้ายคำถามไปที่ด้านล่าง
-    setClosedQuestions((prev) => [...prev, { questionNo, questionText }]);
+    // เมื่อปิดคำถามแล้ว ย้ายคำถามไปที่ด้านล่างพร้อมกับคำตอบ
+    setClosedQuestions((prev) => [...prev, { questionNo, questionText, answers }]);
+
+    // อัปเดตข้อมูลคำถามที่ปิดใน Firebase
+    const closedQuestionRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/closedQuestions/${questionNo}`);
+    set(closedQuestionRef, {
+      question_no: questionNo,
+      question_text: questionText,
+      answers: answers
+    });
 
     // ปิดคำถามและเพิ่มหมายเลขคำถามใหม่
     setIsQuestionVisible(false);
     setQuestionNo(prev => prev + 1); // เพิ่มหมายเลขคำถาม
     setQuestionText(''); // เคลียร์ข้อความคำถาม
+    setAnswers([]); // เคลียร์คำตอบ
   };
 
   const handleQuestionNoChange = (e) => {
@@ -90,7 +121,7 @@ const ManagementQA = () => {
   };
 
   return (
-    <div className="classroom-container">
+    <div className="managementqa-container">
       <h1>Create Question</h1>
       <div>
         <input
@@ -156,6 +187,20 @@ const ManagementQA = () => {
           {closedQuestions.map((closedQuestion, index) => (
             <li key={index}>
               <strong>{`ข้อที่ ${closedQuestion.questionNo}: ${closedQuestion.questionText}`}</strong>
+              <ul>
+                {closedQuestion.answers.map((answer, answerIndex) => (
+                  <li key={answerIndex}>
+                    <strong>{answer.text}</strong>
+                    <ul>
+                      {Object.keys(answer.students || {}).map((studentId) => (
+                        <li key={studentId}>
+                          {answer.students[studentId].text} ({answer.students[studentId].time})
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>
