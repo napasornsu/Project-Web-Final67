@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { QRCodeCanvas } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom'; // import useNavigate
 import '../css/ClassroomManagement.css';
@@ -38,7 +38,7 @@ const ClassroomManagement = () => {
   const handleCreateClassroom = async () => {
     const user = auth.currentUser;
     if (user) {
-      await addDoc(collection(db, 'classroom'), {
+      const newClassroomRef = await addDoc(collection(db, 'classroom'), {
         owner: user.uid,
         info: {
           name: newClassroom.name,
@@ -47,7 +47,14 @@ const ClassroomManagement = () => {
           photo: newClassroom.photo,
         },
       });
-      setClassrooms([...classrooms, { id: Date.now().toString(), info: newClassroom }]);
+      const cid = newClassroomRef.id;
+
+      // Save the classroom ID in /users/{uid}/classroom/{cid} with status = 1
+      await setDoc(doc(db, `users/${user.uid}/classroom/${cid}`), {
+        status: 1
+      });
+
+      setClassrooms([...classrooms, { id: cid, info: newClassroom }]);
       setNewClassroom({ name: '', code: '', room: '', photo: '' });
     }
   };
@@ -153,7 +160,7 @@ const ClassroomManagement = () => {
                   <p>{classroom.info.code || 'No code available'}</p>
                   <p>{classroom.info.room || 'No room available'}</p>
                   <div className="qr-code">
-                    <QRCodeCanvas value={`https://yourapp.com/classroom/${classroom.id}`} />
+                    <QRCodeCanvas key={classroom.id} value={`${classroom.id}`} size={128} />
                   </div>
                   <button onClick={() => setEditingClassroom(classroom.id)}>Edit</button>
                   <button className="delete-button" onClick={() => handleDeleteClassroom(classroom.id)}>Delete</button>

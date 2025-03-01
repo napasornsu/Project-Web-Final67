@@ -150,7 +150,7 @@ const ClassScreen = () => {
       Alert.alert('Error', 'Please enter both check-in number and code.');
       return;
     }
-
+    
     try {
       const checkinRef = doc(db, `classroom/${classId}/checkin`, checkinCno);
       const checkinSnap = await getDoc(checkinRef);
@@ -165,7 +165,7 @@ const ClassScreen = () => {
         Alert.alert('Error', 'Invalid check-in code or session is not active.');
         return;
       }
-
+      
       const studentRef = doc(db, `classroom/${classId}/students`, auth.currentUser.uid);
       const studentSnap = await getDoc(studentRef);
 
