@@ -90,6 +90,25 @@ const ClassroomManagement = () => {
     navigate(`/classroom-management/${classroomId}/Checkin`);
   };
 
+  const handleAddQuiz = async (cid) => {
+    try {
+      const checkinRef = collection(db, `classroom/${cid}/checkin`);
+      const checkinSnapshot = await getDocs(checkinRef);
+      
+      const checkinIds = checkinSnapshot.docs.map(doc => parseInt(doc.id, 10)).filter(id => !isNaN(id));
+      const latestCno = checkinIds.length > 0 ? Math.max(...checkinIds).toString() : null;
+      
+      if (latestCno) {
+        navigate(`/classroom-management/${cid}/checkin/${latestCno}/ManagementQA`);
+      } else {
+        alert('No check-in sessions available. Please create a check-in first.');
+      }
+    } catch (error) {
+      console.error('Error fetching latest cno:', error);
+      alert('Failed to fetch check-in sessions. Please try again.');
+    }
+  };
+
   return (
     <div className="classroom-container">
       <h2>Manage Your Classrooms</h2>
@@ -172,6 +191,8 @@ const ClassroomManagement = () => {
                   <button className="student-list-button" onClick={() => navigate(`/student-list/${classroom.id}`)}>Show Student List</button>
                   {/* ปุ่มเพิ่มการเช็คชื่อ */}
                   <button className="checkin-button" onClick={() => handleAddCheckin(classroom.id)}>Add Check-in</button>
+
+                  <button className="checkin-button" onClick={() => handleAddQuiz(classroom.id)}>Add Quiz</button>
                 </div>
               )}
             </div>

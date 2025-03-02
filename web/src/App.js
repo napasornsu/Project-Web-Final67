@@ -57,7 +57,7 @@ const App = () => {
         />
         {/* Protected Route for Management Q&A*/}
         <Route
-          path="/ManagementQA"
+          path="/classroom-management/:cid/checkin/:cno/ManagementQA"
           element={user ? <ManagementQA /> : <Navigate to="/login" />}
         />
         {/* Route for Checkin page */}

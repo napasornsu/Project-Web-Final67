@@ -22,13 +22,15 @@ const ClassScreen = () => {
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [checkinCno, setCheckinCno] = useState('');
   const [checkinCode, setCheckinCode] = useState('');
-  const [checkinError, setCheckinError] = useState<string | null>(null); // Error state for check-in
+  const [checkinError, setCheckinError] = useState<string | null>(null);
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [quizCno, setQuizCno] = useState('');
   const [quizQno, setQuizQno] = useState('');
+  const [prevQuizQno, setPrevQuizQno] = useState<string | null>(null);
   const [quizAnswer, setQuizAnswer] = useState('');
   const [checkedInCid, setCheckedInCid] = useState<string | null>(null);
   const [checkedInCno, setCheckedInCno] = useState<string | null>(null);
+  const [justSubmitted, setJustSubmitted] = useState(false);
   const router = useRouter();
   const { classId } = useLocalSearchParams();
 
@@ -73,25 +75,32 @@ const ClassScreen = () => {
     const unsubscribe = onSnapshot(checkinRef, async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
+        const currentQno = data.question_no || '1';
+
         if (data.question_show === true) {
           const studentRef = doc(db, `classroom/${checkedInCid}/students`, auth.currentUser.uid);
           const studentSnap = await getDoc(studentRef);
           if (!studentSnap.exists()) return;
           const studentData = studentSnap.data();
 
-          const answerRef = doc(db, `classroom/${checkedInCid}/checkin/${checkedInCno}/answers/${data.qno || '1'}/students`, studentData.stdid);
+          const answerRef = doc(db, `classroom/${checkedInCid}/checkin/${checkedInCno}/answers/${currentQno}/students`, studentData.stdid);
           const answerSnap = await getDoc(answerRef);
           const hasAnswered = answerSnap.exists() && !!answerSnap.data().text;
 
-          if (!hasAnswered) {
+          if ((!hasAnswered && !justSubmitted) || (prevQuizQno !== null && currentQno !== prevQuizQno)) {
             setQuizCno(checkedInCno);
-            setQuizQno(data.qno || '1');
+            setQuizQno(currentQno);
             setShowQuizModal(true);
           } else {
             setShowQuizModal(false);
           }
+
+          setPrevQuizQno(currentQno);
+          if (justSubmitted) setJustSubmitted(false);
         } else {
           setShowQuizModal(false);
+          setPrevQuizQno(null);
+          setJustSubmitted(false);
         }
       }
     }, (error) => {
@@ -99,7 +108,7 @@ const ClassScreen = () => {
     });
 
     return () => unsubscribe();
-  }, [classroom, checkedInCid, checkedInCno, classId]);
+  }, [classroom, checkedInCid, checkedInCno, classId, prevQuizQno, justSubmitted]);
 
   const handleBackPress = () => {
     router.push('/');
@@ -135,7 +144,7 @@ const ClassScreen = () => {
 
   const handleCheckinPress = () => {
     setShowCheckinModal(true);
-    setCheckinError(null); // Reset error on modal open
+    setCheckinError(null);
   };
 
   const handleCheckinSubmit = async () => {
@@ -185,10 +194,10 @@ const ClassScreen = () => {
       setCheckedInCid(classId as string);
       setCheckedInCno(checkinCno);
 
-      setShowCheckinModal(false); // Close modal on success
+      setShowCheckinModal(false);
       setCheckinCno('');
       setCheckinCode('');
-      setCheckinError(null); // Clear error on success
+      setCheckinError(null);
       Alert.alert('Success', 'Check-in successful!');
     } catch (error) {
       console.error('Error during check-in:', error);
@@ -219,11 +228,13 @@ const ClassScreen = () => {
       const answerRef = doc(db, `classroom/${classId}/checkin/${quizCno}/answers/${quizQno}/students`, studentData.stdid);
       await setDoc(answerRef, {
         text: quizAnswer,
+        time: new Date().toISOString(), // Add submission timestamp
       });
 
       Alert.alert('Success', 'Answer submitted!');
       setShowQuizModal(false);
       setQuizAnswer('');
+      setJustSubmitted(true);
     } catch (error) {
       console.error('Error submitting quiz answer:', error);
       Alert.alert('Error', 'Failed to submit answer.');

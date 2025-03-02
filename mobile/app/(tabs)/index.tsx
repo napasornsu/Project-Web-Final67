@@ -47,10 +47,13 @@ const HomeScreen = () => {
     try {
       const userClassroomColl = collection(db, `users/${user.uid}/classroom`);
       const userClassroomSnapshot = await getDocs(userClassroomColl);
-      const classroomPromises = userClassroomSnapshot.docs.map(async (classDoc) => {
-        const classId = classDoc.id;
-        const classData = classDoc.data();
-        if (classData.status === 2) { // Fetch only student classrooms
+      const enrolledClassroomIds = userClassroomSnapshot.docs.map(doc => doc.id);
+  
+      const classroomPromises = enrolledClassroomIds.map(async (classId) => {
+        const studentRef = doc(db, `classroom/${classId}/students`, user.uid);
+        const studentSnap = await getDoc(studentRef);
+  
+        if (studentSnap.exists() && studentSnap.data().status === 1) {
           const classRef = doc(db, 'classroom', classId);
           const classSnap = await getDoc(classRef);
           if (classSnap.exists()) {
@@ -59,6 +62,7 @@ const HomeScreen = () => {
         }
         return null;
       });
+  
       const classroomList = (await Promise.all(classroomPromises)).filter(Boolean) as Classroom[];
       setClassrooms(classroomList);
     } catch (error) {
@@ -86,7 +90,7 @@ const HomeScreen = () => {
         return;
       }
 
-      // Add user to classroom with status 2 (student)
+      // Add user to classroom with status 2 (student, pending approval)
       await setDoc(userClassroomRef, { status: 2 });
 
       // Add student details to classroom/students subcollection
@@ -98,7 +102,7 @@ const HomeScreen = () => {
       });
 
       setClassrooms([...classrooms, { id: classroomId, ...classroomData.info } as Classroom]);
-      Alert.alert('Success', `Joined classroom: ${classroomData.info.name}`);
+      Alert.alert('Success', `Joined classroom: ${classroomData.info.name}. Awaiting approval.`);
     } catch (error) {
       console.error('Error joining classroom:', error);
       Alert.alert('Error', 'Failed to join classroom.');
