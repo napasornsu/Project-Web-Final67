@@ -52,13 +52,12 @@ const Checkin = () => {
       }
       const newCheckinNumber = checkinCount + 1;
       const checkinRef = await addDoc(collection(db, `classroom/${classroomId}/checkin`), {
-        cno: newCheckinNumber,
         timestamp: new Date(),
         status: 0,
         code: code,
         date: new Date().toLocaleString()
       });
-      setCheckinId(checkinRef.id);
+      setCheckinId(newCheckinNumber.toString());
       setCheckinDetails({ cno: newCheckinNumber, code, status: 0, date: new Date().toLocaleString() });
       console.log('Check-in created with ID:', checkinRef.id);
 
