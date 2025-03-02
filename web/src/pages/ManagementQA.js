@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ref, set, update, push, onValue } from 'firebase/database';
+import { doc, setDoc, updateDoc, getDoc, onSnapshot, collection, deleteDoc } from 'firebase/firestore';
 import { useNavigate, useParams } from 'react-router-dom';
-import { realtimeDb } from '../firebaseConfig'; // Import realtimeDb from firebaseConfig.js
+import { db } from '../firebaseConfig'; // Import Firestore db from firebaseConfig.js
 import '../css/ManagementQA.css';
 
 const ManagementQA = () => {
@@ -10,106 +10,103 @@ const ManagementQA = () => {
   const [isQuestionVisible, setIsQuestionVisible] = useState(false);
   const [answers, setAnswers] = useState([]);
   const [closedQuestions, setClosedQuestions] = useState([]);  // รายการคำถามที่ปิดแล้ว
-  const [answerText, setAnswerText] = useState('');  // เพิ่ม useState สำหรับเก็บคำตอบ
 
   const { cid, cno } = useParams();  // ใช้ useParams เพื่อดึง cid และ cno จาก URL
   const navigate = useNavigate();
 
-  // ฟังการเปลี่ยนแปลงคำตอบจาก Firebase
+  // ฟังการเปลี่ยนแปลงคำตอบจาก Firestore
   useEffect(() => {
     if (!cid || !cno) {
       console.error("Missing cid or cno in URL params");
       return;
     }
 
-    const answersRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/answers/${questionNo}`);
-    const handleSnapshot = (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        // อัปเดตคำตอบที่ดึงมาใหม่
-        setAnswers(Object.values(data));
-      }
-    };
-
-    // ฟังข้อมูลคำตอบจาก Firebase
-    const unsubscribe = onValue(answersRef, handleSnapshot);
+    const answersRef = collection(db, `classroom/${cid}/checkin/${cno}/answers/${questionNo}/students`);
+    const unsubscribe = onSnapshot(answersRef, (snapshot) => {
+      const data = snapshot.docs.map(doc => doc.data());
+      setAnswers(data);
+    });
 
     // ทำการยกเลิกการฟังข้อมูลเมื่อคอมโพเนนต์ unmount
     return () => unsubscribe();
   }, [cid, cno, questionNo]);
 
-  // ฟังการเปลี่ยนแปลงคำถามที่ปิดแล้วจาก Firebase
+  // ฟังการเปลี่ยนแปลงคำถามที่ปิดแล้วจาก Firestore
   useEffect(() => {
     if (!cid || !cno) {
       console.error("Missing cid or cno in URL params");
       return;
     }
 
-    const closedQuestionsRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/closedQuestions`);
-    const handleSnapshot = (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        // อัปเดตรายการคำถามที่ปิดแล้ว
-        setClosedQuestions(Object.values(data));
-      }
-    };
+    const closedQuestionsRef = collection(db, `classroom/${cid}/checkin/${cno}/closedQuestions`);
+    const unsubscribe = onSnapshot(closedQuestionsRef, (snapshot) => {
+      const data = snapshot.docs.map(doc => doc.data());
+      setClosedQuestions(data);
+    });
 
-    // ฟังข้อมูลคำถามที่ปิดแล้วจาก Firebase
-    const unsubscribe = onValue(closedQuestionsRef, handleSnapshot);
+    // ทำการยกเลิกการฟังข้อมูลเมื่อคอมโพเนนต์ unmount
+    return () => unsubscribe();
+  }, [cid, cno]);
+
+  // ฟังการเปลี่ยนแปลงสถานะ question_show จาก Firestore
+  useEffect(() => {
+    if (!cid || !cno) {
+      console.error("Missing cid or cno in URL params");
+      return;
+    }
+
+    const questionShowRef = doc(db, `classroom/${cid}/checkin/${cno}`);
+    const unsubscribe = onSnapshot(questionShowRef, (doc) => {
+      const data = doc.data();
+      setIsQuestionVisible(data?.question_show === true);
+    });
 
     // ทำการยกเลิกการฟังข้อมูลเมื่อคอมโพเนนต์ unmount
     return () => unsubscribe();
   }, [cid, cno]);
 
   // ฟังก์ชันเพื่อเริ่มหรือปิดคำถาม
-  useEffect(() => {
-    const questionRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}`);
-    if (isQuestionVisible) {
-      // เก็บข้อมูลคำถามใน Firebase
-      const newQuestionRef = push(ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/questions`));
-      set(newQuestionRef, {
-        question_no: questionNo,
-        question_text: questionText,
-        question_show: true
-      });
-    } else {
-      update(questionRef, {
-        question_show: false
-      });
-    }
-  }, [isQuestionVisible, questionNo, questionText, cid, cno]);
-
-  // ฟังก์ชันสำหรับการตอบคำถาม
-  const handleAnswerSubmit = (answerText) => {
-    const studentId = "student1"; // แทนที่ด้วย ID ของนักเรียนที่แท้จริง
-    const answerRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/answers/${questionNo}/students/${studentId}`);
-    set(answerRef, {
-      text: answerText,
-      time: new Date().toISOString()
+  const handleStartQuestion = async () => {
+    const questionRef = doc(db, `classroom/${cid}/checkin/${cno}`);
+    await updateDoc(questionRef, {
+      question_no: questionNo,
+      question_text: questionText,
+      question_show: true
     });
-  };
-
-  const handleStartQuestion = () => {
     setIsQuestionVisible(true);
   };
 
-  const handleEndQuestion = () => {
+  const handleEndQuestion = async () => {
     // เมื่อปิดคำถามแล้ว ย้ายคำถามไปที่ด้านล่างพร้อมกับคำตอบ
     setClosedQuestions((prev) => [...prev, { questionNo, questionText, answers }]);
 
-    // อัปเดตข้อมูลคำถามที่ปิดใน Firebase
-    const closedQuestionRef = ref(realtimeDb, `/classroom/${cid}/checkin/${cno}/closedQuestions/${questionNo}`);
-    set(closedQuestionRef, {
+    // อัปเดตข้อมูลคำถามที่ปิดใน Firestore
+    const closedQuestionRef = doc(db, `classroom/${cid}/checkin/${cno}/closedQuestions/${questionNo}`);
+    await setDoc(closedQuestionRef, {
       question_no: questionNo,
       question_text: questionText,
       answers: answers
     });
 
     // ปิดคำถามและเพิ่มหมายเลขคำถามใหม่
+    const questionRef = doc(db, `classroom/${cid}/checkin/${cno}`);
+    await updateDoc(questionRef, {
+      question_show: false
+    });
+
     setIsQuestionVisible(false);
     setQuestionNo(prev => prev + 1); // เพิ่มหมายเลขคำถาม
     setQuestionText(''); // เคลียร์ข้อความคำถาม
     setAnswers([]); // เคลียร์คำตอบ
+  };
+
+  const handleDeleteQuestion = async (questionNo) => {
+    // ลบคำถามจาก Firestore
+    const closedQuestionRef = doc(db, `classroom/${cid}/checkin/${cno}/closedQuestions/${questionNo}`);
+    await deleteDoc(closedQuestionRef);
+
+    // อัปเดตรายการคำถามที่ปิดแล้วใน state
+    setClosedQuestions((prev) => prev.filter(q => q.questionNo !== questionNo));
   };
 
   const handleQuestionNoChange = (e) => {
@@ -150,36 +147,6 @@ const ManagementQA = () => {
         )}
       </div>
 
-      {/* สำหรับนักเรียน */}
-      {isQuestionVisible && (
-        <div>
-          <h3>คำถาม: {questionText}</h3>
-          <div>
-            <input
-              type="text"
-              placeholder="ตอบคำถาม"
-              value={answerText}  // ใช้ state สำหรับเก็บคำตอบที่ผู้ใช้กรอก
-              onChange={(e) => setAnswerText(e.target.value)}  // อัปเดตคำตอบที่กรอก
-            />
-            <button onClick={() => handleAnswerSubmit(answerText)}>ส่งคำตอบ</button> {/* ปุ่มส่งคำตอบ */}
-          </div>
-          <ul>
-            {answers.map((answer, index) => (
-              <li key={index}>
-                <strong>{answer.text}</strong>
-                <ul>
-                  {Object.keys(answer.students || {}).map((studentId) => (
-                    <li key={studentId}>
-                      {answer.students[studentId].text} ({answer.students[studentId].time})
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/* รายการคำถามที่ปิดแล้ว */}
       <div>
         <h4>คำถามที่ปิดแล้ว:</h4>
@@ -201,6 +168,7 @@ const ManagementQA = () => {
                   </li>
                 ))}
               </ul>
+              <button onClick={() => handleDeleteQuestion(closedQuestion.questionNo)}>ลบคำถาม</button>
             </li>
           ))}
         </ul>

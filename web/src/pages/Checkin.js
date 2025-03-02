@@ -146,6 +146,9 @@ const Checkin = () => {
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/scores`}>
                   <button>View Scores</button>
                 </Link>
+                <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/qa`}>
+                  <button>View QA</button>
+                </Link>
               </td>
             </tr>
           ))}

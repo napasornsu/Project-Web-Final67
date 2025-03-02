@@ -50,16 +50,18 @@ export const submitAnswer = async (cid, cno, questionNo, uid, answerText) => {
   }
 };
 
-  {/* สำหรับนักเรียน */}
-        {/* {isQuestionVisible && (
+      {/* สำหรับนักเรียน */}
+      {isQuestionVisible && (
         <div>
           <h3>คำถาม: {questionText}</h3>
           <div>
             <input
               type="text"
               placeholder="ตอบคำถาม"
-              onBlur={(e) => handleAnswerSubmit(e.target.value)}
+              value={answerText}  // ใช้ state สำหรับเก็บคำตอบที่ผู้ใช้กรอก
+              onChange={(e) => setAnswerText(e.target.value)}  // อัปเดตคำตอบที่กรอก
             />
+            <button onClick={() => handleAnswerSubmit(answerText)}>ส่งคำตอบ</button> {/* ปุ่มส่งคำตอบ */}
           </div>
           <ul>
             {answers.map((answer, index) => (
@@ -68,8 +70,7 @@ export const submitAnswer = async (cid, cno, questionNo, uid, answerText) => {
                 <ul>
                   {Object.keys(answer.students || {}).map((studentId) => (
                     <li key={studentId}>
-                      {answer.students[studentId].text} (
-                      {answer.students[studentId].time})
+                      {answer.students[studentId].text} ({answer.students[studentId].time})
                     </li>
                   ))}
                 </ul>
@@ -77,5 +78,6 @@ export const submitAnswer = async (cid, cno, questionNo, uid, answerText) => {
             ))}
           </ul>
         </div>
-      )} */}
+      )}
+
 
