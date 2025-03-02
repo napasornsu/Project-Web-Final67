@@ -14,7 +14,7 @@ const ClassroomManagement = () => {
     photo: '',
   });
   const [editingClassroom, setEditingClassroom] = useState(null);
-
+  
   const navigate = useNavigate(); // ใช้ useNavigate สำหรับนำทาง
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const ClassroomManagement = () => {
       setNewClassroom({ name: '', code: '', room: '', photo: '' });
     }
   };
-
+  
   const handleUpdateClassroom = async (id, updatedInfo) => {
     const user = auth.currentUser;
     if (user) {
@@ -84,6 +84,10 @@ const ClassroomManagement = () => {
         setClassrooms(classrooms.filter(classroom => classroom.id !== id));
       }
     }
+  };
+
+  const handleAddCheckin = (classroomId) => {
+    navigate(`/classroom-management/${classroomId}/Checkin`);
   };
 
   return (
@@ -167,7 +171,7 @@ const ClassroomManagement = () => {
                   {/* ปุ่มแสดงตารางรายชื่อนักเรียนที่ลงทะเบียน */}
                   <button className="student-list-button" onClick={() => navigate(`/student-list/${classroom.id}`)}>Show Student List</button>
                   {/* ปุ่มเพิ่มการเช็คชื่อ */}
-                  <button className="checkin-button" onClick={() => navigate(`/Checkin/${classroom.id}`)}>Add Check-in</button>
+                  <button className="checkin-button" onClick={() => handleAddCheckin(classroom.id)}>Add Check-in</button>
                 </div>
               )}
             </div>
@@ -177,7 +181,6 @@ const ClassroomManagement = () => {
 
       {/* ปุ่มกลับไปหน้า Home */}
       <button className="back-home-button" onClick={() => navigate('/')}>Back to Home</button>
-
     </div>
   );
 };

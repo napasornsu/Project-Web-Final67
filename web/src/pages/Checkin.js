@@ -1,118 +1,157 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { db, auth } from '../firebaseConfig';
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
-import { QRCodeCanvas } from 'qrcode.react'; // Import QRCodeCanvas
-import '../css/Checkin.css';
+import { useParams, Link } from 'react-router-dom';
+import { db } from '../firebaseConfig';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc } from 'firebase/firestore';
 
 const Checkin = () => {
-  const { classroomId, cno } = useParams();
-  const [checkinData, setCheckinData] = useState(null);
+  const { classroomId } = useParams();
   const [students, setStudents] = useState([]);
-  const [scores, setScores] = useState([]);
-  const [status, setStatus] = useState(0);
+  const [checkins, setCheckins] = useState([]);
+  const [checkinCount, setCheckinCount] = useState(0);
+  const [checkinId, setCheckinId] = useState('');
   const [code, setCode] = useState('');
-  const [classroomName, setClassroomName] = useState(''); // Add state for classroom name
-  const navigate = useNavigate();
+  const [checkinDetails, setCheckinDetails] = useState(null);
 
   useEffect(() => {
-    const fetchClassroomName = async () => {
-      const classroomRef = doc(db, `classroom/${classroomId}`);
-      const classroomDoc = await getDoc(classroomRef);
-      if (classroomDoc.exists()) {
-        setClassroomName(classroomDoc.data().info.name);
-      }
-    };
-
-    const fetchCheckinData = async () => {
-      const checkinRef = doc(db, `classroom/${classroomId}/checkin/${cno}`);
-      const checkinDoc = await getDoc(checkinRef);
-      if (checkinDoc.exists()) {
-        const data = checkinDoc.data();
-        setCheckinData(data);
-        setStatus(data.status);
-        setCode(data.code);
-      }
-    };
-
-    const fetchStudents = async () => {
-      const studentsRef = collection(db, `classroom/${classroomId}/checkin/${cno}/students`);
-      const studentsSnapshot = await getDocs(studentsRef);
-      const studentsData = [];
-      studentsSnapshot.forEach(doc => {
-        studentsData.push({ id: doc.id, ...doc.data() });
-      });
-      setStudents(studentsData);
-    };
-
-    const fetchScores = async () => {
-      const scoresRef = collection(db, `classroom/${classroomId}/checkin/${cno}/scores`);
-      const scoresSnapshot = await getDocs(scoresRef);
-      const scoresData = [];
-      scoresSnapshot.forEach(doc => {
-        scoresData.push({ id: doc.id, ...doc.data() });
-      });
-      setScores(scoresData);
-    };
-
-    fetchClassroomName();
-    fetchCheckinData();
     fetchStudents();
-    fetchScores();
-  }, [classroomId, cno]);
+    fetchCheckins();
+  }, []);
 
-  const handleStartCheckin = async () => {
-    const checkinRef = doc(db, `classroom/${classroomId}/checkin/${cno}`);
-    await updateDoc(checkinRef, { status: 1 });
-    setStatus(1);
+  const fetchStudents = async () => {
+    try {
+      const studentsCollection = collection(db, `classroom/${classroomId}/students`);
+      const studentsSnapshot = await getDocs(studentsCollection);
+      const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), attendance: 0 }));
+      setStudents(studentsList);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
   };
 
-  const handleEndCheckin = async () => {
-    const checkinRef = doc(db, `classroom/${classroomId}/checkin/${cno}`);
-    await updateDoc(checkinRef, { status: 2 });
-    setStatus(2);
+  const fetchCheckins = async () => {
+    try {
+      const checkinsCollection = collection(db, `classroom/${classroomId}/checkin`);
+      const checkinsSnapshot = await getDocs(checkinsCollection);
+      const checkinsList = await Promise.all(checkinsSnapshot.docs.map(async (doc) => {
+        const studentsCollection = collection(db, `classroom/${classroomId}/checkin/${doc.id}/students`);
+        const studentsSnapshot = await getDocs(studentsCollection);
+        const attendeeCount = studentsSnapshot.size;
+        return { id: doc.id, attendeeCount, ...doc.data() };
+      }));
+      setCheckins(checkinsList);
+      setCheckinCount(checkinsList.length);
+    } catch (error) {
+      console.error('Error fetching check-ins:', error);
+    }
   };
 
-  const handleSaveCheckin = async () => {
-    const checkinRef = doc(db, `classroom/${classroomId}/checkin/${cno}`);
-    await updateDoc(checkinRef, { status: 2 });
-    const studentsRef = collection(db, `classroom/${classroomId}/checkin/${cno}/students`);
-    const studentsSnapshot = await getDocs(studentsRef);
-    studentsSnapshot.forEach(async (doc) => {
-      const studentData = doc.data();
-      const scoreRef = doc(db, `classroom/${classroomId}/checkin/${cno}/scores/${studentData.stdid}`);
-      await setDoc(scoreRef, {
-        date: studentData.date,
-        name: studentData.name,
-        uid: studentData.stdid,
-        remark: studentData.remark,
-        score: 1,
-        status: 1
+  const handleCreateCheckin = async () => {
+    try {
+      if (!code) {
+        throw new Error('Please enter a check-in code.');
+      }
+      const newCheckinNumber = checkinCount + 1;
+      const checkinRef = await addDoc(collection(db, `classroom/${classroomId}/checkin`), {
+        cno: newCheckinNumber,
+        timestamp: new Date(),
+        status: 0,
+        code: code,
+        date: new Date().toLocaleString()
       });
-    });
-    setStatus(2);
+      setCheckinId(checkinRef.id);
+      setCheckinDetails({ cno: newCheckinNumber, code, status: 0, date: new Date().toLocaleString() });
+      console.log('Check-in created with ID:', checkinRef.id);
+
+      const scoresCollection = collection(db, `classroom/${classroomId}/checkin/${checkinRef.id}/scores`);
+      for (const student of students) {
+        await addDoc(scoresCollection, {
+          id: student.id,
+          name: student.name,
+          status: 0
+        });
+      }
+      fetchCheckins();
+    } catch (error) {
+      console.error('Error creating check-in:', error);
+    }
   };
 
-  const handleDeleteStudent = async (sid) => {
-    const studentRef = doc(db, `classroom/${classroomId}/checkin/${cno}/students/${sid}`);
-    await deleteDoc(studentRef);
-    setStudents(students.filter(student => student.id !== sid));
+  const handleStartCheckin = async (checkinId) => {
+    try {
+      const checkinDocRef = doc(db, `classroom/${classroomId}/checkin/${checkinId}`);
+      await updateDoc(checkinDocRef, { status: 1 });
+      fetchCheckins();
+    } catch (error) {
+      console.error('Error starting check-in:', error);
+    }
+  };
+
+  const handleCloseCheckin = async (checkinId) => {
+    try {
+      const checkinDocRef = doc(db, `classroom/${classroomId}/checkin/${checkinId}`);
+      await updateDoc(checkinDocRef, { status: 2 });
+      fetchCheckins();
+    } catch (error) {
+      console.error('Error closing check-in:', error);
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 0: return 'ยังไม่เริ่ม';
+      case 1: return 'กำลังเช็คชื่อ';
+      case 2: return 'เสร็จแล้ว';
+      default: return '-';
+    }
   };
 
   return (
-    <div className="checkin-container">
-      <h2>Check-in for Classroom {classroomName}</h2> {/* Display classroom name */}
-      <div className="checkin-header">
-        <button onClick={() => navigate('/classroom-management')}>Back</button>
-        <button onClick={handleStartCheckin}>Start Check-in</button>
-        <button onClick={handleEndCheckin}>End Check-in</button>
-        <button onClick={handleSaveCheckin}>Save Check-in</button>
-        <button onClick={() => alert(`Check-in Code: ${code}`)}>Show Check-in Code</button>
-        {/* ปุ่มไปทำคำถาม */}
-        <button className="back-home-button" onClick={() => navigate('/ManagementQA')}>Make Q&A</button>
-        <QRCodeCanvas value={`https://yourapp.com/checkin/${classroomId}/${cno}`} />
+    <div>
+      <h1>Check-in Page</h1>
+      <div>
+        <label>Check-in Code: </label>
+        <input 
+          type="text" 
+          value={code} 
+          onChange={(e) => setCode(e.target.value)} 
+          placeholder="Enter check-in code" 
+        />
       </div>
-      
+      <button onClick={handleCreateCheckin}>Create Check-in</button>
+
+      <h2>Check-in History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ลำดับ</th>
+            <th>วัน-เวลา</th>
+            <th>จำนวนคนเข้าเรียน</th>
+            <th>สถานะ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {checkins.map((checkin) => (
+            <tr key={checkin.id}>
+              <td>{checkin.cno}</td>
+              <td>{checkin.date}</td>
+              <td>{checkin.attendeeCount}</td>
+              <td>{getStatusLabel(checkin.status)}</td>
+              <td>
+                {checkin.status === 0 && <button onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
+                {checkin.status === 1 && <button onClick={() => handleCloseCheckin(checkin.id)}>Close</button>}
+                <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/students`}>
+                  <button>View Students</button>
+                </Link>
+                <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/scores`}>
+                  <button>View Scores</button>
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button onClick={fetchCheckins}>เพิ่ม</button>
     </div>
   );
 };
