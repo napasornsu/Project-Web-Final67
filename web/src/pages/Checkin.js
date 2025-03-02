@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../firebaseConfig';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc} from 'firebase/firestore';
 
 const Checkin = () => {
   const { classroomId } = useParams();
@@ -51,22 +51,23 @@ const Checkin = () => {
         throw new Error('Please enter a check-in code.');
       }
       const newCheckinNumber = checkinCount + 1;
-      const checkinRef = await addDoc(collection(db, `classroom/${classroomId}/checkin`), {
+      const checkinRef = doc(db, `classroom/${classroomId}/checkin`, newCheckinNumber.toString()); // Use newCheckinNumber as doc ID
+      await setDoc(checkinRef, {
         timestamp: new Date(),
         status: 0,
         code: code,
-        date: new Date().toLocaleString()
+        date: new Date().toLocaleString(),
       });
       setCheckinId(newCheckinNumber.toString());
-      setCheckinDetails({ cno: newCheckinNumber, code, status: 0, date: new Date().toLocaleString() });
-      console.log('Check-in created with ID:', checkinRef.id);
-
-      const scoresCollection = collection(db, `classroom/${classroomId}/checkin/${checkinRef.id}/scores`);
+      setCheckinDetails({ code, status: 0, date: new Date().toLocaleString() });
+      console.log('Check-in created with ID:', newCheckinNumber);
+  
+      const scoresCollection = collection(db, `classroom/${classroomId}/checkin/${newCheckinNumber}/scores`);
       for (const student of students) {
         await addDoc(scoresCollection, {
           id: student.id,
           name: student.name,
-          status: 0
+          status: 0,
         });
       }
       fetchCheckins();

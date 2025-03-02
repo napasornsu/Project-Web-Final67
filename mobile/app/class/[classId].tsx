@@ -22,6 +22,7 @@ const ClassScreen = () => {
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [checkinCno, setCheckinCno] = useState('');
   const [checkinCode, setCheckinCode] = useState('');
+  const [checkinError, setCheckinError] = useState<string | null>(null); // Error state for check-in
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [quizCno, setQuizCno] = useState('');
   const [quizQno, setQuizQno] = useState('');
@@ -65,7 +66,6 @@ const ClassScreen = () => {
     loadCheckinStatus();
   }, [classId]);
 
-  // Real-time listener for quiz question_show with answer check
   useEffect(() => {
     if (!classroom || !auth.currentUser || !checkedInCid || !checkedInCno || checkedInCid !== classId) return;
 
@@ -74,24 +74,21 @@ const ClassScreen = () => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data.question_show === true) {
-          // Fetch student data to get stdid
           const studentRef = doc(db, `classroom/${checkedInCid}/students`, auth.currentUser.uid);
           const studentSnap = await getDoc(studentRef);
           if (!studentSnap.exists()) return;
           const studentData = studentSnap.data();
 
-          // Check if answer already exists
           const answerRef = doc(db, `classroom/${checkedInCid}/checkin/${checkedInCno}/answers/${data.qno || '1'}/students`, studentData.stdid);
           const answerSnap = await getDoc(answerRef);
           const hasAnswered = answerSnap.exists() && !!answerSnap.data().text;
 
-          // Show modal only if no answer exists
           if (!hasAnswered) {
             setQuizCno(checkedInCno);
             setQuizQno(data.qno || '1');
             setShowQuizModal(true);
           } else {
-            setShowQuizModal(false); // Hide if already answered
+            setShowQuizModal(false);
           }
         } else {
           setShowQuizModal(false);
@@ -138,39 +135,40 @@ const ClassScreen = () => {
 
   const handleCheckinPress = () => {
     setShowCheckinModal(true);
+    setCheckinError(null); // Reset error on modal open
   };
 
   const handleCheckinSubmit = async () => {
     if (!auth.currentUser) {
-      Alert.alert('Error', 'No user logged in.');
+      setCheckinError('No user logged in.');
       return;
     }
 
     if (!checkinCno.trim() || !checkinCode.trim()) {
-      Alert.alert('Error', 'Please enter both check-in number and code.');
+      setCheckinError('Please enter both check-in number and code.');
       return;
     }
-    
+
     try {
       const checkinRef = doc(db, `classroom/${classId}/checkin`, checkinCno);
       const checkinSnap = await getDoc(checkinRef);
 
       if (!checkinSnap.exists()) {
-        Alert.alert('Error', 'Check-in session not found.');
+        setCheckinError('Check-in session not found.');
         return;
       }
 
       const checkinData = checkinSnap.data();
       if (checkinData.code !== checkinCode || checkinData.status !== 1) {
-        Alert.alert('Error', 'Invalid check-in code or session is not active.');
+        setCheckinError('Invalid check-in code or session is not active.');
         return;
       }
-      
+
       const studentRef = doc(db, `classroom/${classId}/students`, auth.currentUser.uid);
       const studentSnap = await getDoc(studentRef);
 
       if (!studentSnap.exists()) {
-        Alert.alert('Error', 'Student data not found for this classroom.');
+        setCheckinError('Student data not found for this classroom.');
         return;
       }
 
@@ -187,13 +185,14 @@ const ClassScreen = () => {
       setCheckedInCid(classId as string);
       setCheckedInCno(checkinCno);
 
-      Alert.alert('Success', 'Check-in successful!');
-      setShowCheckinModal(false);
+      setShowCheckinModal(false); // Close modal on success
       setCheckinCno('');
       setCheckinCode('');
+      setCheckinError(null); // Clear error on success
+      Alert.alert('Success', 'Check-in successful!');
     } catch (error) {
       console.error('Error during check-in:', error);
-      Alert.alert('Error', 'Failed to check in.');
+      setCheckinError('Failed to check in. Please try again.');
     }
   };
 
@@ -277,13 +276,11 @@ const ClassScreen = () => {
               value={checkinCode}
               onChangeText={setCheckinCode}
             />
+            {checkinError && <Text style={styles.errorText}>{checkinError}</Text>}
             <TouchableOpacity style={styles.submitButton} onPress={handleCheckinSubmit}>
               <Text style={styles.buttonText}>Submit</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelModalButton}
-              onPress={() => setShowCheckinModal(false)}
-            >
+            <TouchableOpacity style={styles.cancelModalButton} onPress={() => setShowCheckinModal(false)}>
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -304,10 +301,7 @@ const ClassScreen = () => {
             <TouchableOpacity style={styles.submitButton} onPress={handleQuizSubmit}>
               <Text style={styles.buttonText}>Submit Answer</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelModalButton}
-              onPress={() => setShowQuizModal(false)}
-            >
+            <TouchableOpacity style={styles.cancelModalButton} onPress={() => setShowQuizModal(false)}>
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -401,6 +395,12 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
     borderRadius: 5,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   submitButton: {
     backgroundColor: '#28A745',
