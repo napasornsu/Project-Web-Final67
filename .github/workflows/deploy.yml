@@ -26,14 +26,10 @@ jobs:
         working-directory: web
         run: npm run build
 
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: web/build
+
       - name: Deploy to GitHub Pages
-        run: |
-          cd web/build
-          git init
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Deploy to GitHub Pages"
-          git branch -M gh-pages
-          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/napasornsu/Project-Web-Final67.git
-          git push -f origin gh-pages
+        uses: actions/deploy-pages@v1
