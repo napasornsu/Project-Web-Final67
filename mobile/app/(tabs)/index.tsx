@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert, Modal, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { db } from '../../src/config/firebaseConfig';
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -12,7 +12,6 @@ import jsQR from "jsqr";
 
 import * as FileSystem from "expo-file-system";
 import { ImageManipulator } from "expo-image-manipulator";
-
 interface Classroom {
   id: string;
   code: string;
@@ -20,15 +19,17 @@ interface Classroom {
   room: string;
   photo?: string;
 }
-
 const HomeScreen = () => {
   const { user } = useAuth();
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [hasMediaPermission, setHasMediaPermission] = useState<boolean | null>(null);
   const [scanning, setScanning] = useState(false);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [showStudentInput, setShowStudentInput] = useState(false);
+  const [studentId, setStudentId] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [currentClassroomId, setCurrentClassroomId] = useState<string | null>(null);
   const router = useRouter();
-
 
   useEffect(() => {
     (async () => {
@@ -44,103 +45,95 @@ const HomeScreen = () => {
 
   const fetchUserClassrooms = async () => {
     try {
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const classroomMap = userData.classroom || {};
-        const classroomPromises = Object.entries(classroomMap).map(async ([code, classId]) => {
-          const classRef = doc(db, 'classroom', classId as string);
+      const userClassroomColl = collection(db, `users/${user.uid}/classroom`);
+      const userClassroomSnapshot = await getDocs(userClassroomColl);
+      const enrolledClassroomIds = userClassroomSnapshot.docs.map(doc => doc.id);
+  
+      const classroomPromises = enrolledClassroomIds.map(async (classId) => {
+        const studentRef = doc(db, `classroom/${classId}/students`, user.uid);
+        const studentSnap = await getDoc(studentRef);
+  
+        if (studentSnap.exists() && studentSnap.data().status === 1) {
+          const classRef = doc(db, 'classroom', classId);
           const classSnap = await getDoc(classRef);
           if (classSnap.exists()) {
-            return { id: classId as string, code, ...classSnap.data().info } as Classroom;
+            return { id: classId, ...classSnap.data().info } as Classroom;
           }
-          return null;
-        });
-        const classroomList = (await Promise.all(classroomPromises)).filter(Boolean) as Classroom[];
-        setClassrooms(classroomList);
-      }
+        }
+        return null;
+      });
+  
+      const classroomList = (await Promise.all(classroomPromises)).filter(Boolean) as Classroom[];
+      setClassrooms(classroomList);
     } catch (error) {
       console.error('Error fetching classrooms:', error);
       Alert.alert('Error', 'Failed to load classrooms.');
     }
   };
 
-  const joinClassroom = async (classroomCode: string) => {
+  const joinClassroom = async (classroomId: string, stdId: string, stdName: string) => {
     try {
-      const q = query(collection(db, 'classroom'), where('info.code', '==', classroomCode));
-      const querySnapshot = await getDocs(q);
+      const classRef = doc(db, 'classroom', classroomId);
+      const classSnap = await getDoc(classRef);
 
-      if (querySnapshot.empty) {
-        Alert.alert('Error', 'No classroom found with this code.');
+      if (!classSnap.exists()) {
+        Alert.alert('Error', 'Classroom not found.');
         return;
       }
 
-      const classroomDoc = querySnapshot.docs[0];
-      const classroomId = classroomDoc.id;
-      const classroomData = classroomDoc.data();
+      const classroomData = classSnap.data();
+      const userClassroomRef = doc(db, `users/${user.uid}/classroom`, classroomId);
+      const userClassroomSnap = await getDoc(userClassroomRef);
 
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      const currentClassrooms = userSnap.exists() ? userSnap.data().classroom || {} : {};
-
-      if (currentClassrooms[classroomCode]) {
+      if (userClassroomSnap.exists()) {
         Alert.alert('Info', 'You are already in this classroom.');
         return;
       }
 
-      currentClassrooms[classroomCode] = classroomId;
-      await setDoc(userRef, { classroom: currentClassrooms }, { merge: true });
+      // Add user to classroom with status 2 (student, pending approval)
+      await setDoc(userClassroomRef, { status: 2 });
 
-      setClassrooms([...classrooms, { id: classroomId, code: classroomCode, ...classroomData.info } as Classroom]);
-      Alert.alert('Success', `Joined classroom: ${classroomData.info.name}`);
+      // Add student details to classroom/students subcollection
+      const studentRef = doc(db, `classroom/${classroomId}/students`, user.uid);
+      await setDoc(studentRef, {
+        stdid: stdId,
+        name: stdName,
+        status: 0,
+      });
+
+      setClassrooms([...classrooms, { id: classroomId, ...classroomData.info } as Classroom]);
+      Alert.alert('Success', `Joined classroom: ${classroomData.info.name}. Awaiting approval.`);
     } catch (error) {
       console.error('Error joining classroom:', error);
       Alert.alert('Error', 'Failed to join classroom.');
     }
   };
 
-  const decodeQRCodeFromImage = async (uri) => {
+  const decodeQRCodeFromImage = async (uri: string) => {
     try {
-      if (Platform.OS === "web") {
+      if (Platform.OS === 'web') {
         const response = await fetch(uri);
         const blob = await response.blob();
         const imageBitmap = await createImageBitmap(blob);
-  
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-  
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
         canvas.width = imageBitmap.width;
         canvas.height = imageBitmap.height;
-        ctx.drawImage(imageBitmap, 0, 0);
-        
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-  
+        ctx?.drawImage(imageBitmap, 0, 0);
+        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+        const qrCode = jsQR(imageData?.data, imageData?.width, imageData?.height);
         return qrCode ? qrCode.data : null;
       } else {
-        try {
-          const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-          const img = await ImageManipulator.manipulateAsync(uri, [], { base64: true });
-      
-          const imageData = new Uint8ClampedArray(atob(img.base64).split("").map((c) => c.charCodeAt(0)));
-          
-          const qrCode = jsQR(imageData, img.width, img.height);
-          
-          if (qrCode) {
-            console.log("QR Code Data:", qrCode.data);
-            return qrCode.data;
-          } else {
-            console.log("No QR code found");
-            return null;
-          }
-        } catch (error) {
-          console.error("Error decoding QR code:", error);
-          return null;
-        }
+        const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        const img = await ImageManipulator.manipulateAsync(uri, [], { base64: true });
+        const imageData = new Uint8ClampedArray(
+          atob(img.base64!).split('').map((c) => c.charCodeAt(0))
+        );
+        const qrCode = jsQR(imageData, img.width, img.height);
+        return qrCode ? qrCode.data : null;
       }
     } catch (error) {
-      console.error("Error decoding QR code:", error);
+      console.error('Error decoding QR code:', error);
       return null;
     }
   };
@@ -148,37 +141,49 @@ const HomeScreen = () => {
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     setScanning(false);
     console.log('Scanned QR Code:', { type, data });
-    await joinClassroom(data);
+    setCurrentClassroomId(data);
+    setShowStudentInput(true);
   };
 
   const handleUploadQRCode = async () => {
     if (!hasMediaPermission) {
       Alert.alert('Error', 'Media library permission is required to upload QR codes.');
-      console.log("EERRR")
       return;
     }
-    
+
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images', // Correct string literal for SDK 51
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
-    
+
     if (result.canceled) {
       return;
     }
-    
+
     const { uri } = result.assets[0];
-    
-    try {
-      const data = await decodeQRCodeFromImage(uri)
-      console.log(data)
-      const classroomCode = data;
-      await joinClassroom(classroomCode);
-    } catch (error) {
-      console.error('Error processing QR code:', error);
-      Alert.alert('Error', 'Failed to process QR code image.');
+    const data = await decodeQRCodeFromImage(uri);
+    if (data) {
+      console.log('Decoded QR Code from Upload:', data);
+      setCurrentClassroomId(data);
+      setShowStudentInput(true);
+    } else {
+      Alert.alert('Error', 'No QR code found in the image.');
+    }
+  };
+
+  const handleSubmitStudentInfo = async () => {
+    if (!studentId.trim() || !studentName.trim()) {
+      Alert.alert('Error', 'Please enter both student ID and name.');
+      return;
+    }
+    if (currentClassroomId) {
+      await joinClassroom(currentClassroomId, studentId, studentName);
+      setShowStudentInput(false);
+      setStudentId('');
+      setStudentName('');
+      setCurrentClassroomId(null);
     }
   };
 
@@ -215,11 +220,11 @@ const HomeScreen = () => {
         </View>
       ) : (
         <View style={styles.scannerContainer}>
-            <CameraView
-              style={StyleSheet.absoluteFillObject}
-              facing="back"
-              onBarcodeScanned={handleBarCodeScanned}
-            />
+          <CameraView
+            style={StyleSheet.absoluteFillObject}
+            facing="back"
+            onBarcodeScanned={handleBarCodeScanned}
+          />
           <TouchableOpacity style={styles.cancelButton} onPress={() => setScanning(false)}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
@@ -235,6 +240,36 @@ const HomeScreen = () => {
       ) : (
         <Text style={styles.noClassrooms}>No classrooms yet. Scan QR code to join</Text>
       )}
+
+      {/* Student Input Modal */}
+      <Modal visible={showStudentInput} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Enter Your Details</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Student ID"
+              value={studentId}
+              onChangeText={setStudentId}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={studentName}
+              onChangeText={setStudentName}
+            />
+            <TouchableOpacity style={styles.submitButton} onPress={handleSubmitStudentInfo}>
+              <Text style={styles.buttonText}>Join Classroom</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelModalButton}
+              onPress={() => setShowStudentInput(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -255,6 +290,13 @@ const styles = StyleSheet.create({
   classroomName: { fontSize: 18, fontWeight: 'bold' },
   classroomCode: { fontSize: 14, color: '#666' },
   noClassrooms: { fontSize: 16, color: '#666', textAlign: 'center', marginTop: 20 },
+  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalContent: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%', alignItems: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  input: { width: '100%', borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 15, borderRadius: 5 },
+  submitButton: { backgroundColor: '#28A745', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 5, marginBottom: 10 },
+  cancelModalButton: { backgroundColor: '#FF4D4D', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 5 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
 
 export default HomeScreen;

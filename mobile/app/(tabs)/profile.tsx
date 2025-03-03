@@ -78,20 +78,6 @@ const ProfileScreen = () => {
       <Text style={styles.name}>{userData?.name || user.displayName || 'Unnamed User'}</Text>
       <Text style={styles.email}>{user.email}</Text>
 
-      {/* Additional Firestore Data (e.g., classroom) */}
-      {userData?.classroom && Object.keys(userData.classroom).length > 0 ? (
-        <View style={styles.classroomContainer}>
-          <Text style={styles.sectionTitle}>Classroom:</Text>
-          {Object.entries(userData.classroom).map(([key, value]) => (
-            <Text key={key} style={styles.classroomText}>
-              {key}
-            </Text>
-          ))}
-        </View>
-      ) : (
-        <Text style={styles.noDataText}>No classroom data available.</Text>
-      )}
-
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Log Out</Text>
@@ -141,20 +127,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginBottom: 20,
-  },
-  classroomContainer: {
-    width: '100%',
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  classroomText: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
   },
   noDataText: {
     fontSize: 16,

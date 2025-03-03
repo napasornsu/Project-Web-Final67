@@ -4,6 +4,11 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import ClassroomManagement from "./pages/ClassroomManagement";
+import ManagementQA from "./pages/ManagementQA";
+import Checkin from "./pages/Checkin"; // Import Checkin component
+import StudentList from "./pages/StudentList"; // Import StudentList component
+import CheckinStudentsPage from "./pages/CheckinStudentsPage"; // Import CheckinStudent component
+import CheckinScores from "./pages/CheckinScores"; // Import CheckinScores component
 import { auth } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -49,6 +54,34 @@ const App = () => {
           element={
             user ? <ClassroomManagement /> : <Navigate to="/login" />
           }
+        />
+        {/* Protected Route for Management Q&A*/}
+        <Route
+          path="/classroom-management/:cid/checkin/:cno/ManagementQA"
+          element={user ? <ManagementQA /> : <Navigate to="/login" />}
+        />
+        {/* Route for Checkin page */}
+        <Route
+          path="/classroom-management/:classroomId/Checkin"
+          element={user ? <Checkin /> : <Navigate to="/login" />}
+        />
+
+        {/* Route for Student List page */}
+        <Route
+          path="/student-list/:classroomId"
+          element={user ? <StudentList /> : <Navigate to="/login" />}
+        />
+
+        {/* Route for Checkin Student page */}
+        <Route
+          path="/classroom-management/:classroomId/checkin/:checkinId/students"
+          element={user ? <CheckinStudentsPage /> : <Navigate to="/login" />}
+        />
+
+        {/* Route for Checkin Scores page */}
+        <Route
+          path="/classroom-management/:classroomId/checkin/:checkinId/scores"
+          element={user ? <CheckinScores /> : <Navigate to="/login" />}
         />
       </Routes>
     </div>

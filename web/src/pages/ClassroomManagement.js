@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { QRCodeCanvas } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom'; // import useNavigate
-import './ClassroomManagement.css';
+import '../css/ClassroomManagement.css';
 
 const ClassroomManagement = () => {
   const [classrooms, setClassrooms] = useState([]);
@@ -38,7 +38,7 @@ const ClassroomManagement = () => {
   const handleCreateClassroom = async () => {
     const user = auth.currentUser;
     if (user) {
-      await addDoc(collection(db, 'classroom'), {
+      const newClassroomRef = await addDoc(collection(db, 'classroom'), {
         owner: user.uid,
         info: {
           name: newClassroom.name,
@@ -47,7 +47,14 @@ const ClassroomManagement = () => {
           photo: newClassroom.photo,
         },
       });
-      setClassrooms([...classrooms, { id: Date.now().toString(), info: newClassroom }]);
+      const cid = newClassroomRef.id;
+
+      // Save the classroom ID in /users/{uid}/classroom/{cid} with status = 1
+      await setDoc(doc(db, `users/${user.uid}/classroom/${cid}`), {
+        status: 1
+      });
+
+      setClassrooms([...classrooms, { id: cid, info: newClassroom }]);
       setNewClassroom({ name: '', code: '', room: '', photo: '' });
     }
   };
@@ -76,6 +83,29 @@ const ClassroomManagement = () => {
         await deleteDoc(classroomRef);
         setClassrooms(classrooms.filter(classroom => classroom.id !== id));
       }
+    }
+  };
+
+  const handleAddCheckin = (classroomId) => {
+    navigate(`/classroom-management/${classroomId}/Checkin`);
+  };
+
+  const handleAddQuiz = async (cid) => {
+    try {
+      const checkinRef = collection(db, `classroom/${cid}/checkin`);
+      const checkinSnapshot = await getDocs(checkinRef);
+      
+      const checkinIds = checkinSnapshot.docs.map(doc => parseInt(doc.id, 10)).filter(id => !isNaN(id));
+      const latestCno = checkinIds.length > 0 ? Math.max(...checkinIds).toString() : null;
+      
+      if (latestCno) {
+        navigate(`/classroom-management/${cid}/checkin/${latestCno}/ManagementQA`);
+      } else {
+        alert('No check-in sessions available. Please create a check-in first.');
+      }
+    } catch (error) {
+      console.error('Error fetching latest cno:', error);
+      alert('Failed to fetch check-in sessions. Please try again.');
     }
   };
 
@@ -153,10 +183,16 @@ const ClassroomManagement = () => {
                   <p>{classroom.info.code || 'No code available'}</p>
                   <p>{classroom.info.room || 'No room available'}</p>
                   <div className="qr-code">
-                    <QRCodeCanvas value={`https://yourapp.com/classroom/${classroom.id}`} />
+                    <QRCodeCanvas key={classroom.id} value={`${classroom.id}`} size={128} />
                   </div>
                   <button onClick={() => setEditingClassroom(classroom.id)}>Edit</button>
                   <button className="delete-button" onClick={() => handleDeleteClassroom(classroom.id)}>Delete</button>
+                  {/* ปุ่มแสดงตารางรายชื่อนักเรียนที่ลงทะเบียน */}
+                  <button className="student-list-button" onClick={() => navigate(`/student-list/${classroom.id}`)}>Show Student List</button>
+                  {/* ปุ่มเพิ่มการเช็คชื่อ */}
+                  <button className="checkin-button" onClick={() => handleAddCheckin(classroom.id)}>Add Check-in</button>
+
+                  <button className="checkin-button" onClick={() => handleAddQuiz(classroom.id)}>Add Quiz</button>
                 </div>
               )}
             </div>

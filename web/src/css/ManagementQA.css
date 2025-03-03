@@ -1,0 +1,111 @@
+/* จัดสไตล์สำหรับ managementqa-container */
+.managementqa-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh; /* ลดความสูงของ container */
+  padding: 40px 20px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  margin: 50px auto 0;
+}
+
+/* การจัดสไตล์ให้กับฟอร์มการกรอกข้อมูลคำถาม */
+.managementqa-container input[type="number"],
+.managementqa-container input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.managementqa-container input[type="number"]:focus,
+.managementqa-container input[type="text"]:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* ปุ่มสำหรับการเริ่มและปิดคำถาม */
+.managementqa-container button {
+  padding: 10px 20px;
+  background-color: #5181e0;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 10px 15px 20px 15px;
+  transition: background-color 0.3s;
+}
+
+.managementqa-container button:hover {
+  background-color: #0056b3;
+}
+
+/* ฟอร์มการตอบคำถาม */
+.managementqa-container input[placeholder="ตอบคำถาม"] {
+  width: 80%;
+  padding: 10px;
+  margin-top: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.managementqa-container input[placeholder="ตอบคำถาม"]:focus {
+  border-color: #28a745;
+  outline: none;
+}
+
+/* แสดงคำถามที่ถูกปิดแล้ว */
+.managementqa-container h4 {
+  font-size: 20px;
+  margin-top: 30px;
+  color: #333;
+}
+
+.managementqa-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.managementqa-container li {
+  background-color: #f8f9fa;
+  margin: 5px 0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.managementqa-container li strong {
+  font-size: 16px;
+  color: #007bff;
+}
+
+/* สไตล์สำหรับแสดงคำตอบที่แต่ละนักเรียนให้ */
+.managementqa-container li ul {
+  margin-top: 5px;
+  padding-left: 20px;
+}
+
+.managementqa-container li ul li {
+  font-size: 14px;
+  color: #555;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
