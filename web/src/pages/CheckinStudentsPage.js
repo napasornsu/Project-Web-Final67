@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { collection, doc, getDoc, getDocs, deleteDoc } from 'firebase/firestore';
 import '../css/CheckinStudentsPage.css'; // Import CSS
@@ -7,7 +7,7 @@ import '../css/CheckinStudentsPage.css'; // Import CSS
 const CheckinStudentsPage = () => {
   const { classroomId, checkinId } = useParams();
   const [students, setStudents] = useState([]);
-
+  const navigate = useNavigate();
   useEffect(() => {
     fetchStudents();
   }, []);
@@ -51,7 +51,6 @@ const CheckinStudentsPage = () => {
               <td>{student.name}</td>
               <td className="checkin-students-buttons">
                 <Link to={`/classroom-management/${classroomId}/students/${student.id}`}>
-                  <button className="btn-view">View</button>
                 </Link>
                 <button className="btn-remove" onClick={() => handleRemoveStudent(student.id)}>Remove</button>
               </td>
@@ -59,6 +58,9 @@ const CheckinStudentsPage = () => {
           ))}
         </tbody>
       </table>
+      
+      {/* Back to Home button */}
+      <button className="back-home-button" onClick={() => navigate(`/classroom-management/${classroomId}/Checkin`)}>back</button>
     </div>
   );
 };

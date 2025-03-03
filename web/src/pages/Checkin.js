@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc } from 'firebase/firestore';
 import '../css/Checkin.css'; // Import CSS
@@ -12,6 +12,7 @@ const Checkin = () => {
   const [checkinId, setCheckinId] = useState('');
   const [code, setCode] = useState('');
   const [checkinDetails, setCheckinDetails] = useState(null);
+    const navigate = useNavigate();
 
   useEffect(() => {
     fetchStudents();
@@ -64,11 +65,15 @@ const Checkin = () => {
       console.log('Check-in created with ID:', newCheckinNumber);
 
       const scoresCollection = collection(db, `classroom/${classroomId}/checkin/${newCheckinNumber}/scores`);
-      for (const student of students) {
-        await addDoc(scoresCollection, {
-          id: student.id,
-          name: student.name,
-          status: 0,
+    for (const student of students) {
+        const scoreDocRef = doc(scoresCollection, student.stdid); // Use student.id as the document ID
+        await setDoc(scoreDocRef, {
+          date: null, // Default is null
+          name: student.name, // Copied from students
+          uid: student.id, // UID matches the document ID
+          remark: student.remark || '', // Copied from students, default blank
+          score: 0, // Default score is 0
+          status: '0', // Default status is "0" (ไม่มา)
         });
       }
       fetchCheckins();
@@ -133,13 +138,13 @@ const Checkin = () => {
         </thead>
         <tbody>
           {checkins.map((checkin) => (
-            <tr key={checkin.id}>
-              <td>{checkin.cno}</td>
+            <tr key={checkin.icnod}>
+              <td>{checkin.id}</td>
               <td>{checkin.date}</td>
               <td>{checkin.attendeeCount}</td>
               <td>{getStatusLabel(checkin.status)}</td>
               <td className="checkin-manage-buttons">
-                {checkin.status === 0 && <button className="btn-start" onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
+                {(checkin.status === 0 || checkin.status === 2 ) && <button className="btn-start" onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
                 {checkin.status === 1 && <button className="btn-close" onClick={() => handleCloseCheckin(checkin.id)}>Close</button>}
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/students`}>
                   <button className="btn-students">View Students</button>
@@ -152,6 +157,9 @@ const Checkin = () => {
           ))}
         </tbody>
       </table>
+      
+      {/* Back to Home button */}
+      <button className="back-home-button" onClick={() => navigate('/classroom-management')}>back</button>
           </div>
   );
 };
