@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../firebaseConfig';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc} from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc } from 'firebase/firestore';
+import '../css/Checkin.css'; // Import CSS
 
 const Checkin = () => {
   const { classroomId } = useParams();
@@ -61,7 +62,7 @@ const Checkin = () => {
       setCheckinId(newCheckinNumber.toString());
       setCheckinDetails({ code, status: 0, date: new Date().toLocaleString() });
       console.log('Check-in created with ID:', newCheckinNumber);
-  
+
       const scoresCollection = collection(db, `classroom/${classroomId}/checkin/${newCheckinNumber}/scores`);
       for (const student of students) {
         await addDoc(scoresCollection, {
@@ -107,8 +108,8 @@ const Checkin = () => {
 
   return (
     <div className="checkin-container">
-      <h1>Check-in Page</h1>
-      <div className="checkin-header">
+      <h1 className="checkin-title">Check-in Page</h1>
+      <div className="checkin-input-container">
         <label>Check-in Code: </label>
         <input 
           type="text" 
@@ -116,10 +117,10 @@ const Checkin = () => {
           onChange={(e) => setCode(e.target.value)} 
           placeholder="Enter check-in code" 
         />
-        <button onClick={handleCreateCheckin}>Create Check-in</button>
       </div>
+      <button className="checkin-button" onClick={handleCreateCheckin}>Create Check-in</button>
 
-      <h2>Check-in History</h2>
+      <h2 className="checkin-title">Check-in History</h2>
       <table className="checkin-table">
         <thead>
           <tr>
@@ -133,26 +134,25 @@ const Checkin = () => {
         <tbody>
           {checkins.map((checkin) => (
             <tr key={checkin.id}>
-              <td>{checkin.id}</td>
+              <td>{checkin.cno}</td>
               <td>{checkin.date}</td>
               <td>{checkin.attendeeCount}</td>
               <td>{getStatusLabel(checkin.status)}</td>
-              <td>
-                {(checkin.status === 0 || checkin.status === 2) && <button onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
-                {checkin.status === 1 && <button onClick={() => handleCloseCheckin(checkin.id)}>Close</button>}
+              <td className="checkin-manage-buttons">
+                {checkin.status === 0 && <button className="btn-start" onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
+                {checkin.status === 1 && <button className="btn-close" onClick={() => handleCloseCheckin(checkin.id)}>Close</button>}
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/students`}>
-                  <button>View Students</button>
+                  <button className="btn-students">View Students</button>
                 </Link>
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/scores`}>
-                  <button>View Scores</button>
+                  <button className="btn-scores">View Scores</button>
                 </Link>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <button className="fetch-button" onClick={fetchCheckins}>เพิ่ม</button>
-    </div>
+          </div>
   );
 };
 
