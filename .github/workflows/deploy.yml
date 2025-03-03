@@ -19,19 +19,21 @@ jobs:
           node-version: '14'
 
       - name: Install dependencies
-        run: |
-          cd web
-          npm install
+        working-directory: web
+        run: npm install
 
       - name: Build the application
-        run: |
-          cd web
-          npm run build
+        working-directory: web
+        run: npm run build
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./web/build
-          publish_branch: gh-pages
-          force_orphan: true
+        run: |
+          cd web/build
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Deploy to GitHub Pages"
+          git branch -M gh-pages
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/napasornsu/Project-Web-Final67.git
+          git push -f origin gh-pages
