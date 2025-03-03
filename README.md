@@ -95,6 +95,3 @@ npm install
 
 # รันแอปผ่าน Expo
 npm start
-```
-
----
