@@ -190,9 +190,9 @@ const ClassroomManagement = () => {
                   {/* ปุ่มแสดงตารางรายชื่อนักเรียนที่ลงทะเบียน */}
                   <button className="student-list-button" onClick={() => navigate(`/student-list/${classroom.id}`)}>Show Student List</button>
                   {/* ปุ่มเพิ่มการเช็คชื่อ */}
-                  <button className="checkin-button" onClick={() => handleAddCheckin(classroom.id)}>Add Check-in</button>
+                  <button className="checkin-button" onClick={() => handleAddCheckin(classroom.id)}>Check-in</button>
 
-                  <button className="checkin-button" onClick={() => handleAddQuiz(classroom.id)}>Add Quiz</button>
+                  <button className="checkin-button" onClick={() => handleAddQuiz(classroom.id)}>Quiz</button>
                 </div>
               )}
             </div>

@@ -1,71 +1,116 @@
+/* Checkin.css */
 .checkin-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-  }
-  
-  .checkin-header {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 800px;
-    margin-bottom: 20px;
-  }
-  
-  .checkin-header button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    margin: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-  }
-  
-  .checkin-header button:hover {
-    background-color: #45a049;
-  }
-  
-  .students-list, .scores-list {
-    width: 100%;
-    max-width: 800px;
-    margin-bottom: 20px;
-  }
-  
-  .students-list table, .scores-list table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .students-list th, .scores-list th, .students-list td, .scores-list td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-  
-  .students-list th, .scores-list th {
-    background-color: #f2f2f2;
-    text-align: left;
-  }
-  
-  .students-list tr:nth-child(even), .scores-list tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
-  .students-list tr:hover, .scores-list tr:hover {
-    background-color: #ddd;
-  }
-  
-  .students-list td button, .scores-list td button {
-    background-color: #f44336;
-    color: white;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .students-list td button:hover, .scores-list td button:hover {
-    background-color: #e53935;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.checkin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 20px;
+}
+
+.checkin-header label {
+  margin-right: 10px;
+  font-size: 1.1em;
+}
+
+.checkin-header input {
+  padding: 8px;
+  font-size: 1em;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  flex-grow: 1; /* Allow input to expand */
+  margin-right: 10px;
+}
+
+.checkin-header button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.checkin-header button:hover {
+  background-color: #45a049;
+}
+
+.checkin-table {
+  width: 100%;
+  max-width: 800px;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.checkin-table th,
+.checkin-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.checkin-table th {
+  background-color: #f2f2f2;
+}
+
+.checkin-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.checkin-table tr:hover {
+  background-color: #ddd;
+}
+
+.checkin-table td button {
+  background-color: #007bff; /* Blue for action buttons */
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.checkin-table td button:hover {
+  background-color: #0056b3;
+}
+
+/* Specific styling for Start and Close buttons */
+.checkin-table td button.start {
+  background-color: #28a745; /* Green for Start */
+}
+
+.checkin-table td button.start:hover {
+  background-color: #218838;
+}
+
+.checkin-table td button.close {
+  background-color: #dc3545; /* Red for Close */
+}
+
+.checkin-table td button.close:hover {
+  background-color: #c82333;
+}
+
+.fetch-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.fetch-button:hover {
+  background-color: #45a049;
+}
+

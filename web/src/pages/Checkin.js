@@ -106,9 +106,9 @@ const Checkin = () => {
   };
 
   return (
-    <div>
+    <div className="checkin-container">
       <h1>Check-in Page</h1>
-      <div>
+      <div className="checkin-header">
         <label>Check-in Code: </label>
         <input 
           type="text" 
@@ -116,11 +116,11 @@ const Checkin = () => {
           onChange={(e) => setCode(e.target.value)} 
           placeholder="Enter check-in code" 
         />
+        <button onClick={handleCreateCheckin}>Create Check-in</button>
       </div>
-      <button onClick={handleCreateCheckin}>Create Check-in</button>
 
       <h2>Check-in History</h2>
-      <table>
+      <table className="checkin-table">
         <thead>
           <tr>
             <th>ลำดับ</th>
@@ -133,12 +133,12 @@ const Checkin = () => {
         <tbody>
           {checkins.map((checkin) => (
             <tr key={checkin.id}>
-              <td>{checkin.cno}</td>
+              <td>{checkin.id}</td>
               <td>{checkin.date}</td>
               <td>{checkin.attendeeCount}</td>
               <td>{getStatusLabel(checkin.status)}</td>
               <td>
-                {checkin.status === 0 && <button onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
+                {(checkin.status === 0 || checkin.status === 2) && <button onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
                 {checkin.status === 1 && <button onClick={() => handleCloseCheckin(checkin.id)}>Close</button>}
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/students`}>
                   <button>View Students</button>
@@ -151,7 +151,7 @@ const Checkin = () => {
           ))}
         </tbody>
       </table>
-      <button onClick={fetchCheckins}>เพิ่ม</button>
+      <button className="fetch-button" onClick={fetchCheckins}>เพิ่ม</button>
     </div>
   );
 };
