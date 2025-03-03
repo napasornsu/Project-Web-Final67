@@ -1,136 +1,279 @@
 /* Classroom Management Container */
 .classroom-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.page-title {
+    color: #2c3e50;
     text-align: center;
-    max-width: 600px;
-    margin: 50px auto;
-  }
-  
-  /* Section Title */
-  .classroom-container h2 {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #333;
-  }
-  
-  /* New Classroom Section */
-  .create-classroom-section {
-    width: 100%;
-    margin-bottom: 30px;
-  }
-  
-  .create-classroom-section input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1em;
-    background-color: #f9f9f9;
-  }
-  
-  .create-classroom-section button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    width: 100%;
-  }
-  
-  .create-classroom-section button:hover {
-    background-color: #45a049;
-  }
-  
-  /* Classroom List */
-  .classroom-list {
-    list-style-type: none;
-    padding: 0;
-    width: 100%;
-    text-align: center;
-  }
-  
-  .classroom-list li {
-    background-color: #f9f9f9;
-    margin: 15px 0;
-    padding: 20px;
-    border: 1px solid #ddd;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+.create-classroom-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+}
+
+.create-classroom-section h3 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.input-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.input-group input {
+    padding: 0.8rem;
+    border: 2px solid #e0e0e0;
     border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .classroom-list li img {
-    border-radius: 8px;
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    margin-bottom: 10px;
-  }
-  
-  .classroom-list li h4 {
-    font-size: 1.2em;
-    color: #333;
-    margin: 10px 0;
-  }
-  
-  .classroom-list li p {
-    color: #777;
-    margin: 5px 0;
-  }
-  
-  .classroom-list li button {
-    background-color: #007bff;
-    color: white;
-    padding: 8px 15px;
-    margin: 5px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-  }
-  
-  .classroom-list li button:hover {
-    background-color: #0056b3;
-  }
-  
-  .classroom-list li .delete-button {
-    background-color: #dc3545;
-  }
-  
-  .classroom-list li .delete-button:hover {
-    background-color: #c82333;
-  }
-  
-  .qr-code {
-    margin-top: 15px;
-  }
-  
-/* Button: Back to Home */
-.classroom-container .back-home-button {
-    background-color: transparent;
-    color: #4CAF50;
-    border: 1px solid #4CAF50;
     font-size: 1rem;
-    padding: 10px 20px;
-    margin-top: 20px;
-    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.create-button {
+    background: #3498db;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .classroom-container .back-home-button:hover {
-    background-color: #f1f1f1;
-  }
+    transition: all 0.3s ease;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.create-button:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+.classroom-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 0;
+    list-style: none;
+    margin: 2rem 0;
+}
+
+.classroom-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.classroom-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.classroom-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.classroom-info {
+    padding: 1.5rem;
+}
+
+.classroom-name {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+}
+
+.classroom-details {
+    color: #7f8c8d;
+    margin-bottom: 1rem;
+}
+
+.qr-code {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.button-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.action-button {
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.edit-button {
+    background: #4CAF50;
+    color: white;
+}
+
+.edit-button:hover {
+    background: #43A047;
+    transform: translateY(-2px);
+}
+
+.save-button {
+    background: #2196F3;
+    color: white;
+    grid-column: span 1;
+}
+
+.save-button:hover {
+    background: #1976D2;
+    transform: translateY(-2px);
+}
+
+.cancel-button {
+    background: #9e9e9e;
+    color: white;
+    grid-column: span 1;
+}
+
+.cancel-button:hover {
+    background: #757575;
+    transform: translateY(-2px);
+}
+
+.delete-button {
+    background: #f44336;
+    color: white;
+}
+
+.delete-button:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+}
+
+.student-list-button {
+    background: #673AB7;
+    color: white;
+    grid-column: span 2;
+}
+
+.student-list-button:hover {
+    background: #5E35B1;
+    transform: translateY(-2px);
+}
+
+.checkin-button {
+    background: #FF9800;
+    color: white;
+    grid-column: span 2;
+}
+
+.checkin-button:hover {
+    background: #F57C00;
+    transform: translateY(-2px);
+}
+
+.quiz-button {
+    background: #009688;
+    color: white;
+    grid-column: span 2;
+}
+
+.quiz-button:hover {
+    background: #00897B;
+    transform: translateY(-2px);
+}
+
+.back-home-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #34495e;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.back-home-button:hover {
+    background: #2c3e50;
+    transform: translateY(-2px);
+}
+
+/* Edit Form Styles */
+.edit-form {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.edit-form .input-group {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.edit-form input {
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.edit-form input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+
+.edit-form-title {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 600;
+}
   
   

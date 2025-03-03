@@ -36,18 +36,32 @@ const Home = () => {
   return (
     <div className="home-container">
       {userData && (
-        <div>
-          <h2>Welcome, {userData.name}</h2>
-          <img src={userData.photo} alt="Profile" />
+        <div className="home-card">
+          <img 
+            src={userData.photo} 
+            alt="Profile" 
+            className="profile-image"
+          />
+          <h2 className="welcome-text">Welcome, {userData.name}</h2>
           <div className="button-container">
-            {/* ปุ่มนำทางไปยังหน้า Profile */}
-            <button onClick={() => navigate('/profile')}>Go to Profile</button>
-
-            {/* ปุ่มนำทางไปยังหน้า Classroom Management */}
-            <button onClick={() => navigate('/classroom-management')}>Manage Classrooms</button>
-
-            {/* ปุ่ม Logout */}
-            <button className="logout-button" onClick={handleLogout}>Logout</button>
+            <button 
+              className="home-button profile-button"
+              onClick={() => navigate('/profile')}
+            >
+              My Profile
+            </button>
+            <button 
+              className="home-button classroom-button"
+              onClick={() => navigate('/classroom-management')}
+            >
+              Manage Classrooms
+            </button>
+            <button 
+              className="home-button logout-button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
           </div>
         </div>
       )}

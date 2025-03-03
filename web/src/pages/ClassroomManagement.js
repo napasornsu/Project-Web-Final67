@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { QRCodeCanvas } from 'qrcode.react';
-import { useNavigate } from 'react-router-dom'; // import useNavigate
+import { useNavigate } from 'react-router-dom';
 import '../css/ClassroomManagement.css';
 
 const ClassroomManagement = () => {
@@ -15,7 +15,7 @@ const ClassroomManagement = () => {
   });
   const [editingClassroom, setEditingClassroom] = useState(null);
   
-  const navigate = useNavigate(); // ใช้ useNavigate สำหรับนำทาง
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchClassrooms = async () => {
@@ -44,12 +44,11 @@ const ClassroomManagement = () => {
           name: newClassroom.name,
           code: newClassroom.code,
           room: newClassroom.room,
-          photo: newClassroom.photo,
+          photo: newClassroom.photo || 'https://via.placeholder.com/300x200',
         },
       });
       const cid = newClassroomRef.id;
 
-      // Save the classroom ID in /users/{uid}/classroom/{cid} with status = 1
       await setDoc(doc(db, `users/${user.uid}/classroom/${cid}`), {
         status: 1
       });
@@ -86,10 +85,6 @@ const ClassroomManagement = () => {
     }
   };
 
-  const handleAddCheckin = (classroomId) => {
-    navigate(`/classroom-management/${classroomId}/Checkin`);
-  };
-
   const handleAddQuiz = async (cid) => {
     try {
       const checkinRef = collection(db, `classroom/${cid}/checkin`);
@@ -111,97 +106,154 @@ const ClassroomManagement = () => {
 
   return (
     <div className="classroom-container">
-      <h2>Manage Your Classrooms</h2>
+      <h2 className="page-title">Manage Your Classrooms</h2>
 
       <div className="create-classroom-section">
         <h3>Create New Classroom</h3>
-        <input
-          type="text"
-          placeholder="Classroom Name"
-          value={newClassroom.name}
-          onChange={(e) => setNewClassroom({ ...newClassroom, name: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Classroom Code"
-          value={newClassroom.code}
-          onChange={(e) => setNewClassroom({ ...newClassroom, code: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Classroom Room"
-          value={newClassroom.room}
-          onChange={(e) => setNewClassroom({ ...newClassroom, room: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Classroom Photo URL"
-          value={newClassroom.photo}
-          onChange={(e) => setNewClassroom({ ...newClassroom, photo: e.target.value })}
-        />
-        <button onClick={handleCreateClassroom}>Create Classroom</button>
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="Classroom Name"
+            value={newClassroom.name}
+            onChange={(e) => setNewClassroom({ ...newClassroom, name: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Classroom Code"
+            value={newClassroom.code}
+            onChange={(e) => setNewClassroom({ ...newClassroom, code: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Room Number"
+            value={newClassroom.room}
+            onChange={(e) => setNewClassroom({ ...newClassroom, room: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Photo URL (optional)"
+            value={newClassroom.photo}
+            onChange={(e) => setNewClassroom({ ...newClassroom, photo: e.target.value })}
+          />
+        </div>
+        <button className="create-button" onClick={handleCreateClassroom}>
+          Create Classroom
+        </button>
       </div>
 
-      <h3>Your Classrooms</h3>
       <ul className="classroom-list">
-        {classrooms.map((classroom, index) => (
-          <li key={index}>
-            <div>
-              {editingClassroom === classroom.id ? (
-                <div>
+        {classrooms.map((classroom) => (
+          <li key={classroom.id} className="classroom-card">
+            {editingClassroom === classroom.id ? (
+              <div className="edit-form">
+                <h4 className="edit-form-title">Edit Classroom</h4>
+                <div className="input-group">
                   <input
                     type="text"
                     placeholder="Classroom Name"
                     value={classroom.info.name}
-                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, name: e.target.value } } : c))}
+                    onChange={(e) => setClassrooms(classrooms.map(c => 
+                      c.id === classroom.id ? { ...c, info: { ...c.info, name: e.target.value } } : c
+                    ))}
                   />
                   <input
                     type="text"
                     placeholder="Classroom Code"
                     value={classroom.info.code}
-                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, code: e.target.value } } : c))}
+                    onChange={(e) => setClassrooms(classrooms.map(c => 
+                      c.id === classroom.id ? { ...c, info: { ...c.info, code: e.target.value } } : c
+                    ))}
                   />
                   <input
                     type="text"
-                    placeholder="Classroom Room"
+                    placeholder="Room Number"
                     value={classroom.info.room}
-                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, room: e.target.value } } : c))}
+                    onChange={(e) => setClassrooms(classrooms.map(c => 
+                      c.id === classroom.id ? { ...c, info: { ...c.info, room: e.target.value } } : c
+                    ))}
                   />
                   <input
                     type="text"
-                    placeholder="Classroom Photo URL"
+                    placeholder="Photo URL"
                     value={classroom.info.photo}
-                    onChange={(e) => setClassrooms(classrooms.map(c => c.id === classroom.id ? { ...c, info: { ...c.info, photo: e.target.value } } : c))}
+                    onChange={(e) => setClassrooms(classrooms.map(c => 
+                      c.id === classroom.id ? { ...c, info: { ...c.info, photo: e.target.value } } : c
+                    ))}
                   />
-                  <button onClick={() => handleUpdateClassroom(classroom.id, classroom.info)}>Save</button>
-                  <button onClick={() => setEditingClassroom(null)}>Cancel</button>
                 </div>
-              ) : (
-                <div>
-                  <img src={classroom.info.photo} alt="Classroom" />
-                  <h4>{classroom.info.name || 'No name available'}</h4>
-                  <p>{classroom.info.code || 'No code available'}</p>
-                  <p>{classroom.info.room || 'No room available'}</p>
-                  <div className="qr-code">
-                    <QRCodeCanvas key={classroom.id} value={`${classroom.id}`} size={128} />
+                <div className="button-group">
+                  <button 
+                    className="action-button save-button"
+                    onClick={() => handleUpdateClassroom(classroom.id, classroom.info)}
+                  >
+                    Save Changes
+                  </button>
+                  <button 
+                    className="action-button cancel-button"
+                    onClick={() => setEditingClassroom(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <img 
+                  src={classroom.info.photo || 'https://via.placeholder.com/300x200'} 
+                  alt={classroom.info.name}
+                  className="classroom-image"
+                />
+                <div className="classroom-info">
+                  <h4 className="classroom-name">{classroom.info.name || 'Unnamed Classroom'}</h4>
+                  <div className="classroom-details">
+                    <p>Code: {classroom.info.code || 'No code'}</p>
+                    <p>Room: {classroom.info.room || 'No room assigned'}</p>
                   </div>
-                  <button onClick={() => setEditingClassroom(classroom.id)}>Edit</button>
-                  <button className="delete-button" onClick={() => handleDeleteClassroom(classroom.id)}>Delete</button>
-                  {/* ปุ่มแสดงตารางรายชื่อนักเรียนที่ลงทะเบียน */}
-                  <button className="student-list-button" onClick={() => navigate(`/student-list/${classroom.id}`)}>Show Student List</button>
-                  {/* ปุ่มเพิ่มการเช็คชื่อ */}
-                  <button className="checkin-button" onClick={() => handleAddCheckin(classroom.id)}>Check-in</button>
-
-                  <button className="checkin-button" onClick={() => handleAddQuiz(classroom.id)}>Quiz</button>
+                  <div className="qr-code">
+                    <QRCodeCanvas value={classroom.id} size={128} />
+                  </div>
+                  <div className="button-group">
+                    <button 
+                      className="action-button edit-button"
+                      onClick={() => setEditingClassroom(classroom.id)}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className="action-button delete-button"
+                      onClick={() => handleDeleteClassroom(classroom.id)}
+                    >
+                      Delete
+                    </button>
+                    <button 
+                      className="action-button student-list-button"
+                      onClick={() => navigate(`/student-list/${classroom.id}`)}
+                    >
+                      Student List
+                    </button>
+                    <button 
+                      className="action-button checkin-button"
+                      onClick={() => navigate(`/classroom-management/${classroom.id}/Checkin`)}
+                    >
+                      Check-in
+                    </button>
+                    <button 
+                      className="action-button quiz-button"
+                      onClick={() => handleAddQuiz(classroom.id)}
+                    >
+                      Quiz
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </li>
         ))}
       </ul>
 
-      {/* ปุ่มกลับไปหน้า Home */}
-      <button className="back-home-button" onClick={() => navigate('/')}>Back to Home</button>
+      <button className="back-home-button" onClick={() => navigate('/')}>
+        Back to Home
+      </button>
     </div>
   );
 };
