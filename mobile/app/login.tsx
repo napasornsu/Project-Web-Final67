@@ -36,7 +36,7 @@ const LoginScreen = () => {
   const router = useRouter();
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: '329238043303-j6ppf3vm8frorh72p8pmpo9u5hfau25b.apps.googleusercontent.com',
+    clientId: '329238043303-afph5cq0ov30evd4pu38c450jvn8lt2q.apps.googleusercontent.com',
   });
 
   useEffect(() => {

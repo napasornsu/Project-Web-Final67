@@ -3,13 +3,27 @@
     "name": "mobile",
     "slug": "mobile",
     "version": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/96f9703a-f2ea-45bc-bbd4-db2ea20543af"
+    },
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "class-management-5",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +36,8 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.anonymous.mobile"
+      "package": "com.anonymous.mobile",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -54,6 +69,15 @@
       "camera": true,
       "photos": true,
       "mediaLibrary": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "96f9703a-f2ea-45bc-bbd4-db2ea20543af"
+      }
+    },
+    "owner": "nopinp"
   }
 }
