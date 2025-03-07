@@ -51,7 +51,7 @@ const Checkin = () => {
         throw new Error('Please enter a check-in code.');
       }
       const newCheckinNumber = checkinCount + 1;
-      const checkinRef = doc(db, `classroom/${classroomId}/checkin`, newCheckinNumber.toString()); // Use newCheckinNumber as doc ID
+      const checkinRef = doc(db, `classroom/${classroomId}/checkin`, newCheckinNumber.toString());
       await setDoc(checkinRef, {
         timestamp: new Date(),
         status: 0,
@@ -62,14 +62,16 @@ const Checkin = () => {
       setCheckinDetails({ code, status: 0, date: new Date().toLocaleString() });
       console.log('Check-in created with ID:', newCheckinNumber);
   
-      const scoresCollection = collection(db, `classroom/${classroomId}/checkin/${newCheckinNumber}/scores`);
+      // Use student.id (stdid) as document ID in scores collection
       for (const student of students) {
-        await addDoc(scoresCollection, {
-          id: student.id,
+        const scoreRef = doc(db, `classroom/${classroomId}/checkin/${newCheckinNumber}/scores`, student.stdid);
+        await setDoc(scoreRef, {
+          id: student.stdid, // Still store student ID as a field
           name: student.name,
           status: 0,
         });
       }
+  
       fetchCheckins();
     } catch (error) {
       console.error('Error creating check-in:', error);
@@ -131,15 +133,21 @@ const Checkin = () => {
           </tr>
         </thead>
         <tbody>
-          {checkins.map((checkin) => (
+        {checkins
+          .sort((a, b) => Number(b.id) - Number(a.id)) // Sort by id descending
+          .map((checkin) => (
             <tr key={checkin.id}>
               <td>{checkin.id}</td>
               <td>{checkin.date}</td>
               <td>{checkin.attendeeCount}</td>
               <td>{getStatusLabel(checkin.status)}</td>
               <td>
-                {(checkin.status === 0 || checkin.status === 2) && <button onClick={() => handleStartCheckin(checkin.id)}>Start</button>}
-                {checkin.status === 1 && <button onClick={() => handleCloseCheckin(checkin.id)}>Close</button>}
+                {(checkin.status === 0 || checkin.status === 2) && (
+                  <button onClick={() => handleStartCheckin(checkin.id)}>Start</button>
+                )}
+                {checkin.status === 1 && (
+                  <button onClick={() => handleCloseCheckin(checkin.id)}>Close</button>
+                )}
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/students`}>
                   <button>View Students</button>
                 </Link>
@@ -149,9 +157,9 @@ const Checkin = () => {
               </td>
             </tr>
           ))}
-        </tbody>
+      </tbody>
       </table>
-      <button className="fetch-button" onClick={fetchCheckins}>เพิ่ม</button>
+      <button className="fetch-button" onClick={fetchCheckins}>Refresh</button>
     </div>
   );
 };

@@ -189,6 +189,24 @@ const ClassScreen = () => {
         date: new Date().toISOString(),
       });
 
+      // Update scores collection
+      const scoreRef = doc(db, `classroom/${classId}/checkin/${checkinCno}/scores`, studentData.stdid);
+      const checkinDate = new Date().toLocaleString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }); // Format: "10/02/2025 13:00"
+      await setDoc(scoreRef, {
+        date: checkinDate,
+        name: studentData.name || 'Unknown',
+        uid: auth.currentUser.uid,
+        remark: studentData.remark || '', // Copy from students or default to empty
+        score: 1, // Default score for attending
+        status: 1, // 1: มาเรียน (attended)
+      }, { merge: true }); // Use merge to avoid overwriting teacher edits
+
       await AsyncStorage.setItem('checkedInCno', checkinCno);
       await AsyncStorage.setItem('checkedInCid', classId as string);
       setCheckedInCid(classId as string);
@@ -228,7 +246,7 @@ const ClassScreen = () => {
       const answerRef = doc(db, `classroom/${classId}/checkin/${quizCno}/answers/${quizQno}/students`, studentData.stdid);
       await setDoc(answerRef, {
         text: quizAnswer,
-        time: new Date().toISOString(), // Add submission timestamp
+        time: new Date().toISOString(),
       });
 
       Alert.alert('Success', 'Answer submitted!');
