@@ -81,20 +81,16 @@
 ## 🎉 การติดตั้งและใช้งาน
 ### 🔧 Web Application (ReactJS)
 
-# ติดตั้ง Dependencies
+#### ติดตั้ง Dependencies
 npm install
 
-# รันโปรเจค
+#### รันโปรเจค
 npm start
-```
 
 ### 📱 Mobile Application (React Native Expo)
 
-# ติดตั้ง Dependencies
+#### ติดตั้ง Dependencies
 npm install
 
-# รันแอปผ่าน Expo
+#### รันแอปผ่าน Expo
 npm start
-```
-
----

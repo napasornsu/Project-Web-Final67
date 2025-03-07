@@ -24,6 +24,53 @@ const CheckinScores = () => {
     }
   };
 
+  const fetchStudentsAndScores = async () => {
+    try {
+      // Fetch all students in the classroom
+      const studentsCollection = collection(db, `classroom/${classroomId}/students`);
+      const studentsSnapshot = await getDocs(studentsCollection);
+      const allStudents = studentsSnapshot.docs.map(doc => ({
+        stdid: doc.id,
+        name: doc.data().name || 'Unknown',
+        remark: doc.data().remark || '',
+      }));
+      setStudents(allStudents); // Store raw student list
+
+      // Merge students with check-in and score data for UI
+      const mergedScores = await Promise.all(
+        allStudents.map(async (student) => {
+          const checkinDocRef = doc(db, `classroom/${classroomId}/checkin/${checkinId}/students/${student.stdid}`);
+          const checkinDocSnap = await getDoc(checkinDocRef);
+          const scoreDocRef = doc(db, `classroom/${classroomId}/checkin/${checkinId}/scores/${student.stdid}`);
+          const scoreDocSnap = await getDoc(scoreDocRef);
+          const scoreData = scoreDocSnap.exists() ? scoreDocSnap.data() : {};
+
+          if (checkinDocSnap.exists()) {
+            return {
+              ...student,
+              score: scoreData.score !== undefined ? scoreData.score : 1,
+              status: scoreData.status !== undefined ? scoreData.status : '1',
+              remark: scoreData.remark || student.remark || '',
+              date: scoreData.date || checkinDocSnap.data().date || new Date().toISOString(),
+            };
+          } else {
+            return {
+              ...student,
+              score: scoreData.score !== undefined ? scoreData.score : 0,
+              status: scoreData.status !== undefined ? scoreData.status : '0',
+              remark: scoreData.remark || student.remark || '',
+              date: scoreData.date || new Date().toISOString(),
+            };
+          }
+        })
+      );
+
+      setScores(mergedScores); // Store UI-editable scores
+    } catch (error) {
+      console.error('Error fetching students and scores:', error);
+    }
+  };
+
   const handleScoreChange = (id, field, value) => {
     setScores(scores.map(score => 
       score.id === id ? { ...score, [field]: value } : score
@@ -83,7 +130,7 @@ const CheckinScores = () => {
         </thead>
         <tbody>
           {scores.map((score, index) => (
-            <tr key={score.id}>
+            <tr key={score.stdid}>
               <td>{index + 1}</td>
               <td>{score.id}</td> {/* Assuming id is stdid */}
               <td>{score.name}</td>

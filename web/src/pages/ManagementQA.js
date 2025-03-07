@@ -296,7 +296,7 @@ const ManagementQA = () => {
       </div>
 
       {/* Back to Home button */}
-      <button className="back-home-button" onClick={() => navigate('/')}>กลับสู่หน้าแรก</button>
+      <button className="back-home-button" onClick={() => navigate('/classroom-management')}>back</button>
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc} from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc } from 'firebase/firestore';
+import '../css/Checkin.css'; // Import CSS
 
 const Checkin = () => {
   const { classroomId } = useParams();
@@ -11,6 +12,7 @@ const Checkin = () => {
   const [checkinId, setCheckinId] = useState('');
   const [code, setCode] = useState('');
   const [checkinDetails, setCheckinDetails] = useState(null);
+    const navigate = useNavigate();
 
   useEffect(() => {
     fetchStudents();
@@ -109,8 +111,8 @@ const Checkin = () => {
 
   return (
     <div className="checkin-container">
-      <h1>Check-in Page</h1>
-      <div className="checkin-header">
+      <h1 className="checkin-title">Check-in Page</h1>
+      <div className="checkin-input-container">
         <label>Check-in Code: </label>
         <input 
           type="text" 
@@ -118,10 +120,10 @@ const Checkin = () => {
           onChange={(e) => setCode(e.target.value)} 
           placeholder="Enter check-in code" 
         />
-        <button onClick={handleCreateCheckin}>Create Check-in</button>
       </div>
+      <button className="checkin-button" onClick={handleCreateCheckin}>Create Check-in</button>
 
-      <h2>Check-in History</h2>
+      <h2 className="checkin-title">Check-in History</h2>
       <table className="checkin-table">
         <thead>
           <tr>
@@ -149,10 +151,10 @@ const Checkin = () => {
                   <button onClick={() => handleCloseCheckin(checkin.id)}>Close</button>
                 )}
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/students`}>
-                  <button>View Students</button>
+                  <button className="btn-students">View Students</button>
                 </Link>
                 <Link to={`/classroom-management/${classroomId}/checkin/${checkin.id}/scores`}>
-                  <button>View Scores</button>
+                  <button className="btn-scores">View Scores</button>
                 </Link>
               </td>
             </tr>
@@ -160,6 +162,7 @@ const Checkin = () => {
       </tbody>
       </table>
       <button className="fetch-button" onClick={fetchCheckins}>Refresh</button>
+      <button className="back-button" onClick={() => navigate('/classroom-management')}>กลับ</button>
     </div>
   );
 };
